@@ -124,6 +124,21 @@ namespace QuanLySieuThi.Controllers
                     invoice.Note = $"Khuyến mãi: {code[..Math.Min(100, code.Length)]}";
                 }
                 invoice.TotalAmount = invoice.Subtotal - invoice.DiscountAmount;
+                if (!isMomo)
+                {
+                    var received = input.CashReceived ?? invoice.TotalAmount;
+                if (received < invoice.TotalAmount || received > 1_000_000_000_000_000m
+               || decimal.Round(received, 2) != received)
+              return BackToSale("Số tiền khách đưa phải lớn hơn hoặc bằng tổng thanh toán.", asJson);
+            invoice.CashReceived = received;
+            invoice.ChangeAmount = received - invoice.TotalAmount;
+           }
+         else
+        {
+           invoice.CashReceived = invoice.TotalAmount;
+         invoice.ChangeAmount = 0;
+         }
+                invoice.TotalAmount = invoice.Subtotal - invoice.DiscountAmount;
                 if (isMomo && (invoice.TotalAmount < 1_000 || invoice.TotalAmount > 50_000_000
                     || decimal.Truncate(invoice.TotalAmount) != invoice.TotalAmount))
                     return BackToSale("MoMo yêu cầu số tiền nguyên từ 1.000 đến 50.000.000 ₫.", asJson);
@@ -144,8 +159,7 @@ namespace QuanLySieuThi.Controllers
             {
                 return BackToSale("Dữ liệu vừa thay đổi. Kiểm tra danh sách hóa đơn trước khi tạo lại.", asJson);
             }
-        }
-
+        }        
         public async Task<IActionResult> Invoices(string? search, CancellationToken cancellationToken)
         {
             var invoices = VisibleInvoices().AsNoTracking().Include(invoice => invoice.Customer).AsQueryable();
@@ -163,7 +177,11 @@ namespace QuanLySieuThi.Controllers
                 .Include(invoice => invoice.CashierUser).ThenInclude(user => user.Employee)
                 .Include(invoice => invoice.Details.OrderBy(line => line.SalesDetailId))
                 .SingleOrDefaultAsync(invoice => invoice.SalesInvoiceId == id, cancellationToken);
-            return invoice is null ? NotFound() : View(invoice);
+                 if (invoice is null)
+                 return NotFound();
+                 if (invoice.Status != "Completed")
+                 return BadRequest("Chỉ có thể in hóa đơn đã thanh toán thành công.");
+                 return View("Print", invoice);
         }
 
         [HttpPost]
