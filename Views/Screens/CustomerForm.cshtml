@@ -1,0 +1,36 @@
+@model QuanLySieuThi.Models.CustomerFormViewModel
+@{
+    ViewData["Title"] = Model.CustomerId == 0 ? "Thêm khách hàng" : "Sửa khách hàng";
+    int? customerId = Model.CustomerId == 0 ? null : Model.CustomerId;
+}
+<div class="page-heading"><h1>@ViewData["Title"]</h1></div>
+<section class="panel p-3">
+    <form asp-action="CustomerForm" asp-route-id="@customerId" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label">Họ tên</label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Phone" class="form-label">Điện thoại</label>
+            <input asp-for="Phone" type="tel" class="form-control" />
+            <span asp-validation-for="Phone" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label">Email</label>
+            <input asp-for="Email" type="email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Address" class="form-label">Địa chỉ</label>
+            <textarea asp-for="Address" class="form-control"></textarea>
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+        <button class="btn btn-primary" type="submit">Lưu</button>
+        <a asp-action="Customers" class="btn btn-outline-secondary">Quay lại</a>
+    </form>
+</section>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

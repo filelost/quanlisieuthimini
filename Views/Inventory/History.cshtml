@@ -1,0 +1,66 @@
+@model IReadOnlyList<QuanLySieuThi.Models.Entities.StockTransaction>
+@{
+    ViewData["Title"] = "Lịch sử tồn kho";
+    var receiptNumbers = (IReadOnlyDictionary<int, string>)ViewData["ReceiptNumbers"]!;
+}
+<div class="page-heading"><h1>Lịch sử tồn kho · @ViewData["Product"]</h1><a asp-action="Index">Quay lại</a></div>
+<section class="panel table-responsive">
+    <table class="table">
+        <thead><tr><th>Thời điểm (UTC+7)</th><th>Nghiệp vụ</th><th>Chứng từ</th><th>Tồn trước</th><th>Thay đổi</th><th>Tồn sau</th><th>Tài khoản ghi nhận</th><th>Lý do</th></tr></thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="8" class="text-center text-muted">Sản phẩm chưa có biến động tồn kho.</td></tr>
+        }
+        @foreach (var movement in Model)
+        {
+            var label = movement.Type switch
+            {
+                "Purchase" => "Nhận hàng nhập",
+                "Sale" => "Bán hàng",
+                "Reserve" => "Giữ hàng chờ thanh toán",
+                "Release" => "Hoàn tồn hàng đã giữ",
+                "CancelSale" or "Return" => "Hoàn tồn hàng đã bán",
+                "Adjustment" => "Điều chỉnh tồn",
+                _ => movement.Type
+            };
+            <tr>
+                <td><partial name="_VietnamDateTime" model="movement.CreatedAt" /></td>
+                <td>@label</td>
+                <td>
+                    @if (movement.ReferenceType == "PurchaseReceipt" && movement.ReferenceId is > 0 and <= int.MaxValue
+                        && receiptNumbers.TryGetValue((int)movement.ReferenceId.Value, out var receiptNo))
+                    {
+                        <a asp-controller="Purchases" asp-action="Details" asp-route-id="@movement.ReferenceId"
+                           asp-fragment="@($"movement-{movement.StockTransactionId}")">@receiptNo</a>
+                        @if (!string.IsNullOrEmpty(movement.SupplierDocumentNo))
+                        {
+                            <small class="d-block text-muted">@movement.SupplierDocumentNo</small>
+                        }
+                    }
+                    else if (movement.ReferenceType == "SalesInvoice" && movement.ReferenceId is long invoiceId)
+                    {
+                        @if (User.IsInRole(RoleNames.Admin))
+                        {
+                            <a asp-controller="Sales" asp-action="Details" asp-route-id="@invoiceId">Hóa đơn #@invoiceId</a>
+                        }
+                        else
+                        {
+                            <span>Hóa đơn #@invoiceId</span>
+                        }
+                    }
+                    else
+                    {
+                        <span>—</span>
+                    }
+                </td>
+                <td>@movement.QuantityBefore.ToString("0.###")</td>
+                <td>@movement.QuantityChange.ToString("+0.###;-0.###;0")</td>
+                <td>@movement.QuantityAfter.ToString("0.###")</td>
+                <td>@movement.CreatedByUser.Username</td>
+                <td class="text-wrap">@(movement.Reason ?? "—")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>

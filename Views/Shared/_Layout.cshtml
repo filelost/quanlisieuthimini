@@ -1,0 +1,80 @@
+@{
+    var isManager = User.IsInRole(RoleNames.Admin);
+    var isCashier = User.IsInRole(RoleNames.Cashier);
+    var isStockStaff = User.IsInRole(RoleNames.StockStaff);
+    var roleLabel = isManager ? "Quản lý" : isCashier ? "Thu ngân" : isStockStaff ? "Nhân viên kho"
+        : User.IsInRole(RoleNames.Customer) ? "Khách hàng" : "Chưa phân vai";
+    var userName = User.Identity?.Name ?? "Người dùng";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Siêu Thị</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/QuanLySieuThi.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" asp-controller="Home" asp-action="Index"><span class="brand-mark">S</span><span>Siêu Thị<small>QUẢN LÝ BÁN LẺ</small></span></a>
+            <div class="sidebar-label">KHÔNG GIAN LÀM VIỆC</div>
+            <nav class="side-nav" aria-label="Chức năng theo vai trò">
+                @if (isManager)
+                {
+                    <a asp-controller="Admin" asp-action="Dashboard"><span>▦</span>Tổng quan</a>
+                    <div class="sidebar-label nav-section-label">DANH MỤC</div>
+                    <a asp-controller="Admin" asp-action="Products"><span>◫</span>Sản phẩm</a>
+                    <a asp-controller="Admin" asp-action="Suppliers"><span>◇</span>Nhà cung cấp</a>
+                }
+                @if (isManager || isCashier)
+                {
+                    <div class="sidebar-label nav-section-label">QUẦY THU NGÂN</div>
+                    <a asp-controller="Sales" asp-action="Index"><span>▣</span>Bán hàng</a>
+                    <a asp-controller="Screens" asp-action="Customers"><span>♙</span>Khách hàng</a>
+                    <a asp-controller="Sales" asp-action="Invoices"><span>▧</span>@(isManager ? "Hóa đơn" : "Hóa đơn của tôi")</a>
+                }
+                @if (isManager || isStockStaff)
+                {
+                    <div class="sidebar-label nav-section-label">KHO HÀNG</div>
+                    <a asp-controller="Inventory" asp-action="Index"><span>▤</span>Tồn kho</a>
+                    <a asp-controller="Purchases" asp-action="Index"><span>⇩</span>Phiếu nhập hàng</a>
+                }
+                @if (isManager)
+                {
+                    <div class="sidebar-label nav-section-label">QUẢN TRỊ</div>
+                    <a asp-controller="Admin" asp-action="Employees"><span>♧</span>Nhân viên & tài khoản</a>
+                    <a asp-controller="Screens" asp-action="Reports"><span>▥</span>Báo cáo</a>
+                }
+                @if (User.IsInRole(RoleNames.Customer))
+                {
+                    <a asp-controller="Screens" asp-action="CustomerPortal"><span>♙</span>Tài khoản của tôi</a>
+                }
+            </nav>
+            <div class="sidebar-bottom"><span class="status-dot"></span>Hệ thống sẵn sàng</div>
+        </aside>
+        <section class="main-panel">
+            <header class="topbar">
+                <div class="topbar-title">Hệ thống quản lý siêu thị <span>/</span> @ViewData["Title"]</div>
+                <div class="topbar-user">
+                    <div class="avatar" aria-hidden="true">@userName[..1].ToUpperInvariant()</div>
+                    <div><strong>@userName</strong><small>@roleLabel</small></div>
+                    <a asp-controller="Auth" asp-action="ChangePassword">Đổi mật khẩu</a>
+                    <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
+                        <button type="submit" class="logout-link border-0 bg-transparent" aria-label="Đăng xuất" title="Đăng xuất">↗</button>
+                    </form>
+                </div>
+            </header>
+            <main class="page-content" role="main">@RenderBody()</main>
+            <footer class="app-footer">© 2026 Hệ thống quản lý siêu thị</footer>
+        </section>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

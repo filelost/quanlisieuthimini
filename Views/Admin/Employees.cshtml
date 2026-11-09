@@ -1,0 +1,26 @@
+@model IReadOnlyList<QuanLySieuThi.Models.EmployeeAccountListItemViewModel>
+@{ ViewData["Title"] = "Nhân viên và tài khoản"; }
+<div class="page-heading"><div><p class="eyebrow">QUẢN TRỊ NGƯỜI DÙNG</p><h1>Nhân viên & tài khoản</h1><p class="text-muted">Tạo tài khoản nhân viên và khóa quyền truy cập khi cần.</p></div><a asp-action="EmployeeCreate" class="btn btn-primary">＋ Thêm nhân viên</a></div>
+@if (TempData["Success"] is string success) { <div class="alert alert-success py-2">@success</div> }
+<section class="metric-strip"><div><small>Tổng hồ sơ nhân viên</small><strong>@Model.Count</strong></div><div><small>Đang hoạt động</small><strong>@Model.Count(x => x.IsActive)</strong></div><div><small>Tài khoản đã cấp</small><strong>@Model.Count(x => x.Username is not null)</strong></div></section>
+<section class="panel table-panel"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Nhân viên</th><th>Mã NV</th><th>Tên đăng nhập</th><th>Chức vụ</th><th>Liên hệ</th><th>Vai trò</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+@if (Model.Count == 0) { <tr><td colspan="8" class="text-center text-muted py-4">Chưa có nhân viên. Tạo tài khoản đầu tiên để bắt đầu.</td></tr> }
+@foreach (var employee in Model)
+{
+    <tr><td><strong>@employee.FullName</strong></td><td>@employee.EmployeeCode</td><td>@(employee.Username ?? "Chưa cấp tài khoản")</td><td>@(employee.Position ?? "—")</td><td>@(employee.Phone ?? "—")</td><td>@if (employee.RoleName == RoleNames.Employee || RoleNames.IsStaffRole(employee.RoleName))
+{
+    <form asp-action="EmployeeChangeRole" asp-route-id="@employee.EmployeeId" method="post" class="d-flex gap-2">
+        <select name="roleName" class="form-select form-select-sm" aria-label="Vai trò" required>
+            <option value="" selected="@(employee.RoleName == RoleNames.Employee)" disabled>Chưa phân vai</option>
+            <option value="@RoleNames.Cashier" selected="@(employee.RoleName == RoleNames.Cashier)">Thu ngân</option>
+            <option value="@RoleNames.StockStaff" selected="@(employee.RoleName == RoleNames.StockStaff)">Nhân viên kho</option>
+        </select>
+        <button class="btn btn-sm btn-outline-secondary" type="submit">Lưu</button>
+    </form>
+}
+else
+{
+    @(employee.RoleName ?? "—")
+}</td><td><span class="status-pill @(employee.IsActive ? "success" : "muted")">@(employee.IsActive ? "Hoạt động" : "Đã khóa")</span></td><td>@if (employee.IsActive) { <form asp-action="EmployeeDeactivate" asp-route-id="@employee.EmployeeId" method="post" onsubmit="return confirm('Khóa tài khoản nhân viên này?')"><button type="submit" class="btn btn-sm btn-outline-danger">Khóa</button></form> }</td></tr>
+}
+</tbody></table></div></section>

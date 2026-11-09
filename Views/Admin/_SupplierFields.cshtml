@@ -1,0 +1,9 @@
+@model QuanLySieuThi.Models.SupplierFormViewModel
+<div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div><div class="form-grid">
+<div><label asp-for="SupplierCode" class="form-label"></label><input asp-for="SupplierCode" class="form-control" placeholder="NCC0001" /><span asp-validation-for="SupplierCode" class="text-danger small"></span></div>
+<div><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger small"></span></div>
+<div><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /></div>
+<div><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger small"></span></div>
+<div class="form-span"><label asp-for="Address" class="form-label"></label><input asp-for="Address" class="form-control" /></div>
+<div class="form-span"><label class="form-check"><input asp-for="IsActive" class="form-check-input" /><span class="form-check-label">Đang hợp tác</span></label></div>
+</div><div class="d-flex justify-content-end gap-2 mt-4"><a asp-action="Suppliers" class="btn btn-outline-secondary">Hủy</a><button type="submit" class="btn btn-primary">Lưu nhà cung cấp</button></div><partial name="_ValidationScriptsPartial" />

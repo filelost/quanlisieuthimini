@@ -1,0 +1,6 @@
+@quanlysieuthi_HostAddress = http://localhost:5233
+
+GET {{quanlysieuthi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

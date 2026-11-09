@@ -1,0 +1,39 @@
+@model QuanLySieuThi.DTO.LoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Đăng nhập";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Đăng nhập - Siêu Thị</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="login-page">
+    <main class="login-card">
+        <a class="brand login-brand" asp-controller="Home" asp-action="Index"><span class="brand-mark">S</span><span>Siêu Thị<small>QUẢN LÝ BÁN LẺ</small></span></a>
+        <div class="login-intro"><p class="eyebrow">CHÀO MỪNG TRỞ LẠI</p><h1>Đăng nhập</h1><p>Nhập thông tin tài khoản để tiếp tục.</p></div>
+        <form asp-controller="Auth" asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+            <label asp-for="Username" class="form-label"></label>
+            <input asp-for="Username" class="form-control form-control-lg" autocomplete="username" placeholder="Ví dụ: nguyenvana" />
+            <span asp-validation-for="Username" class="text-danger small"></span>
+            <label asp-for="Password" class="form-label mt-3"></label>
+            <input asp-for="Password" class="form-control form-control-lg" autocomplete="current-password" placeholder="Nhập mật khẩu" />
+            <span asp-validation-for="Password" class="text-danger small"></span>
+            <div class="login-options"><label asp-for="RememberMe"><input asp-for="RememberMe" /> Ghi nhớ đăng nhập</label></div>
+            <button class="btn btn-primary w-100 btn-lg mt-3" type="submit">Đăng nhập <span>→</span></button>
+        </form>
+        <p class="login-footnote">Đăng nhập an toàn · Quyền truy cập được cấp theo vai trò tài khoản.</p>
+    </main>
+</body>
+</html>
+
+@if (TempData["PasswordChanged"] is string passwordMessage)
+{
+    <p class="alert alert-success" role="status">@passwordMessage</p>
+}

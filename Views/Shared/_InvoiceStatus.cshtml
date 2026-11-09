@@ -1,0 +1,13 @@
+@model string
+@{
+    var (label, style) = Model switch
+    {
+        "Completed" => ("Đã thanh toán", "success"),
+        "AwaitingMoMo" => ("Chờ mở thanh toán MoMo", "warning"),
+        "Pending" => ("Chờ xác nhận thanh toán", "warning"),
+        "Cancelled" => ("Đã hủy", "muted"),
+        "Failed" => ("Thanh toán thất bại", "danger"),
+        _ => (Model, "muted")
+    };
+}
+<span class="status-pill @style">@label</span>

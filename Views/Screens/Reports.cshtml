@@ -1,0 +1,57 @@
+@{ ViewData["Title"] = "Báo cáo"; }
+<h1>Báo cáo doanh thu</h1>
+<p>Doanh thu tính từ hóa đơn đã hoàn tất. Khoảng ngày dùng UTC.</p>
+<details class="card mb-4" open>
+    <summary class="card-header fw-semibold">Bộ lọc</summary>
+    <div class="card-body">
+        <form id="sales-report" class="row g-3">
+            <label class="col-md-4">
+                Báo cáo theo
+                <select name="groupBy" class="form-select">
+                    <option value="day">Từng ngày</option>
+                    <option value="week">Từng tuần trong tháng</option>
+                    <option value="month">Cả tháng</option>
+                </select>
+            </label>
+            <label class="col-md-3">
+                Từ ngày
+                <input name="from" type="date" class="form-control" required>
+            </label>
+            <label class="col-md-3">
+                Đến ngày
+                <input name="to" type="date" class="form-control" required>
+            </label>
+            <div class="col-md-2 align-self-end">
+                <button class="btn btn-primary w-100">Xem báo cáo</button>
+            </div>
+        </form>
+    </div>
+</details>
+<p id="report-status" role="status" aria-live="polite"></p>
+<div class="table-responsive">
+    <table class="table">
+        <thead><tr><th>Kỳ báo cáo</th><th>Khoảng ngày UTC</th><th>Hóa đơn</th><th>Doanh thu</th><th>Chi tiết</th></tr></thead>
+        <tbody id="report-periods"></tbody>
+    </table>
+</div>
+<section id="report-details" class="card mt-4" hidden aria-live="polite">
+    <div class="card-header d-flex justify-content-between align-items-center gap-3">
+        <h2 id="report-details-title" class="h5 mb-0">Chi tiết báo cáo</h2>
+        <button id="report-details-close" type="button" class="btn btn-sm btn-outline-secondary">Đóng</button>
+    </div>
+    <div class="card-body">
+        <p id="report-details-status" role="status"></p>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Hóa đơn</th><th>Ngày giờ (UTC)</th><th>Khách hàng</th><th>Thu ngân</th><th>Thanh toán</th><th>Trạng thái</th><th>Tổng tiền</th><th>Hàng hóa</th></tr></thead>
+                <tbody id="report-invoices"></tbody>
+            </table>
+        </div>
+        <nav class="d-flex justify-content-between align-items-center" aria-label="Phân trang chi tiết báo cáo">
+            <button id="report-details-previous" type="button" class="btn btn-outline-secondary">Trước</button>
+            <span id="report-details-page" class="text-muted"></span>
+            <button id="report-details-next" type="button" class="btn btn-outline-secondary">Tiếp</button>
+        </nav>
+    </div>
+</section>
+<script src="~/js/sales-report.js" asp-append-version="true" defer></script>
