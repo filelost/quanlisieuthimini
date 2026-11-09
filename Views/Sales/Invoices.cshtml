@@ -1,0 +1,20 @@
+@model IReadOnlyList<QuanLySieuThi.Models.Entities.SalesInvoice>
+@{ ViewData["Title"] = "Hóa đơn bán hàng"; }
+<div class="page-heading"><h1>Hóa đơn bán hàng</h1><a class="btn btn-primary" asp-action="Index">Bán hàng</a></div>
+<section class="panel p-3">
+    <form method="get" asp-action="Invoices" class="toolbar">
+        <input class="form-control" name="search" value="@ViewData["Search"]" placeholder="Mã hóa đơn" aria-label="Mã hóa đơn" />
+        <button class="btn btn-outline-secondary">Tìm kiếm</button>
+    </form>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>Mã</th><th>Khách hàng</th><th>Thanh toán</th><th>Trạng thái</th><th>Tổng tiền</th></tr></thead>
+            <tbody>
+            @foreach (var invoice in Model)
+            {
+                <tr><td><a asp-action="Details" asp-route-id="@invoice.SalesInvoiceId">@invoice.InvoiceNo</a></td><td>@(invoice.Customer?.FullName ?? "Khách lẻ")</td><td>@invoice.PaymentMethod</td><td>@invoice.Status</td><td>@invoice.TotalAmount.ToString("N2") ₫</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

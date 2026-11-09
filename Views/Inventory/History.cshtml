@@ -1,0 +1,14 @@
+@model IReadOnlyList<QuanLySieuThi.Models.Entities.StockTransaction>
+@{ ViewData["Title"] = "Lịch sử tồn kho"; }
+<div class="page-heading"><h1>Lịch sử tồn kho · @ViewData["Product"]</h1><a asp-action="Index">Quay lại</a></div>
+<section class="panel table-responsive">
+    <table class="table">
+        <thead><tr><th>Thời điểm (UTC)</th><th>Loại</th><th>Trước</th><th>Thay đổi</th><th>Sau</th><th>Người ghi nhận</th><th>Lý do</th></tr></thead>
+        <tbody>
+        @foreach (var movement in Model)
+        {
+            <tr><td>@movement.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td><td>@movement.Type</td><td>@movement.QuantityBefore</td><td>@movement.QuantityChange</td><td>@movement.QuantityAfter</td><td>@movement.CreatedByUser.Username</td><td>@movement.Reason</td></tr>
+        }
+        </tbody>
+    </table>
+</section>

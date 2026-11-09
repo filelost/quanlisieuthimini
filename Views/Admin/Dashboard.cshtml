@@ -1,0 +1,26 @@
+@model QuanLySieuThi.Models.AdminDashboardViewModel
+@{ ViewData["Title"] = "Tổng quan quản trị"; }
+<div class="page-heading"><div><p class="eyebrow">TRUNG TÂM ĐIỀU HÀNH</p><h1>Xin chào, @User.Identity?.Name</h1><p class="text-muted">Số liệu hoạt động được tổng hợp từ database.</p></div><a asp-controller="Admin" asp-action="Products" class="btn btn-primary">Quản lý sản phẩm <span>→</span></a></div>
+<section class="metric-grid">
+    <article class="metric-card"><div class="metric-top"><span>Doanh thu hôm nay</span><span class="metric-icon green">₫</span></div><strong>@Model.TodayRevenue.ToString("N0") ₫</strong><small>Hóa đơn hoàn tất trong ngày</small></article>
+    <article class="metric-card"><div class="metric-top"><span>Hóa đơn hôm nay</span><span class="metric-icon blue">▣</span></div><strong>@Model.TodayInvoiceCount</strong><small>Giao dịch đã hoàn tất</small></article>
+    <article class="metric-card"><div class="metric-top"><span>Sản phẩm đang bán</span><span class="metric-icon violet">◫</span></div><strong>@Model.ProductCount</strong><small>Đang kinh doanh</small></article>
+    <article class="metric-card"><div class="metric-top"><span>Sắp chạm ngưỡng tồn</span><span class="metric-icon orange">!</span></div><strong>@Model.LowStockCount</strong><small><a asp-controller="Screens" asp-action="Inventory">Xem tồn kho</a></small></article>
+</section>
+<section class="metric-strip"><div><small>Nhân viên hoạt động</small><strong>@Model.EmployeeCount</strong></div><div><small>Khách hàng hoạt động</small><strong>@Model.CustomerCount</strong></div><div><small>Vai trò hệ thống</small><strong>3</strong></div><div><small>Quyền hiện tại</small><strong>Admin</strong></div></section>
+<section class="panel table-panel"><div class="panel-heading"><div><h2>Giao dịch mới nhất</h2><p>Hóa đơn gần đây trong database</p></div><a asp-controller="Screens" asp-action="Invoices" class="text-link">Mở danh sách hóa đơn →</a></div>
+    @if (Model.RecentInvoices.Count == 0)
+    {
+        <div class="empty-state"><span>▧</span><strong>Chưa có giao dịch</strong><p>Hóa đơn sẽ xuất hiện ở đây sau khi có giao dịch bán hàng.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã hóa đơn</th><th>Thời gian</th><th>Thu ngân</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th></tr></thead><tbody>
+        @foreach (var invoice in Model.RecentInvoices)
+        {
+            <tr><td class="fw-semibold">@invoice.InvoiceNo</td><td>@invoice.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td><td>@invoice.CashierName</td><td>@invoice.CustomerName</td><td>@invoice.TotalAmount.ToString("N0") ₫</td><td><span class="status-pill @(invoice.Status == "Completed" ? "success" : "muted")">@(invoice.Status == "Completed" ? "Hoàn tất" : invoice.Status)</span></td></tr>
+        }
+        </tbody></table></div>
+    }
+</section>
+<section class="panel admin-shortcuts"><div class="panel-heading"><div><h2>Quản trị nhanh</h2><p>Các khu vực quản lý chính</p></div></div><div class="shortcut-grid"><a asp-controller="Admin" asp-action="Products"><span class="metric-icon blue">◫</span><strong>Sản phẩm</strong><small>Thêm, sửa, ngừng kinh doanh</small></a><a asp-controller="Admin" asp-action="Suppliers"><span class="metric-icon violet">◇</span><strong>Nhà cung cấp</strong><small>Thông tin đối tác nhập hàng</small></a><a asp-controller="Admin" asp-action="Employees"><span class="metric-icon green">♧</span><strong>Nhân viên</strong><small>Hồ sơ và vai trò</small></a><a asp-controller="Screens" asp-action="Reports"><span class="metric-icon orange">▥</span><strong>Báo cáo</strong><small>Doanh thu và tồn kho</small></a></div></section>

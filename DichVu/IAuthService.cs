@@ -1,0 +1,10 @@
+using QuanLySieuThi.Models.Entities;
+
+namespace QuanLySieuThi.Service
+{
+    public interface IAuthService
+    {
+        Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword, CancellationToken cancellationToken);
+        Task<User?> AuthenticateAsync(string username, string password, CancellationToken cancellationToken = default);
+    }
+}

@@ -1,0 +1,71 @@
+@model PurchasePageViewModel
+@{
+    ViewData["Title"] = "Chi tiết phiếu nhập";
+    var receipt = Model.Receipt;
+}
+<div class="page-heading"><div><h1>Phiếu @receipt.ReceiptNo</h1><p>@receipt.Supplier.Name</p></div><a asp-action="Index">Quay lại</a></div>
+@if (TempData["PurchaseMessage"] is string message)
+{
+    <div class="alert alert-info">@message</div>
+}
+@if (receipt.Status == "Draft")
+{
+    <section class="panel p-3 mb-3">
+        <form asp-action="AddLine" asp-route-id="@receipt.PurchaseReceiptId" method="post" class="row g-2">
+            <div class="col-md-5"><label for="product" class="form-label">Sản phẩm</label>
+                <select id="product" name="productId" class="form-select" required>
+                    <option value="">Chọn sản phẩm</option>
+                    @foreach (var product in Model.Products.Where(product => !receipt.Details.Any(line => line.ProductId == product.ProductId)))
+                    {
+                        <option value="@product.ProductId">@product.Sku · @product.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col"><label for="quantity" class="form-label">Số lượng đặt</label><input id="quantity" name="quantity" class="form-control" type="number" min="0.001" step="0.001" required /></div>
+            <div class="col"><label for="cost" class="form-label">Đơn giá nhập</label><input id="cost" name="unitCost" class="form-control" type="number" min="0" step="0.01" required /></div>
+            <div class="col-auto align-self-end"><button class="btn btn-primary">Thêm dòng</button></div>
+        </form>
+    </section>
+}
+<section class="panel table-responsive">
+    <table class="table align-middle">
+        <thead><tr><th>Sản phẩm</th><th>Đặt</th><th>Đã nhận</th><th>Còn thiếu</th><th>Đơn giá</th><th>Nhận hàng đạt</th></tr></thead>
+        <tbody>
+        @foreach (var line in receipt.Details)
+        {
+            var received = receipt.Status == "Received" ? line.Quantity : Model.Received.GetValueOrDefault(line.ProductId);
+            var remaining = line.Quantity - received;
+            <tr>
+                <td>@line.Product.Name</td><td>@line.Quantity</td><td>@received</td><td>@remaining</td><td>@line.UnitCost.ToString("N2") ₫</td>
+                <td>
+                    @if (remaining > 0 && receipt.Status is "Draft" or "Partial")
+                    {
+                        <form asp-action="Receive" asp-route-id="@receipt.PurchaseReceiptId" method="post" class="d-flex gap-2">
+                            <input type="hidden" name="lineId" value="@line.PurchaseDetailId" />
+                            <input type="hidden" name="expectedReceived" value="@received" />
+                            <input name="quantity" class="form-control" type="number" min="0.001" max="@remaining.ToString(System.Globalization.CultureInfo.InvariantCulture)" step="0.001" required aria-label="Số lượng đạt" />
+                            <input name="reason" class="form-control" maxlength="300" placeholder="Lý do thiếu hoặc lỗi" aria-label="Lý do thiếu hoặc lỗi" />
+                            <button class="btn btn-outline-primary text-nowrap">Xác nhận</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+@if (Model.Deliveries.Count > 0)
+{
+    <section class="panel p-3 mt-3 table-responsive">
+        <h2>Lịch sử nhận hàng</h2>
+        <table class="table">
+            <thead><tr><th>Thời điểm (UTC)</th><th>Sản phẩm</th><th>Số lượng đạt</th><th>Ghi chú</th></tr></thead>
+            <tbody>
+            @foreach (var delivery in Model.Deliveries)
+            {
+                <tr><td>@delivery.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td><td>@delivery.Product.Name</td><td>@delivery.QuantityChange</td><td>@delivery.Reason</td></tr>
+            }
+            </tbody>
+        </table>
+    </section>
+}

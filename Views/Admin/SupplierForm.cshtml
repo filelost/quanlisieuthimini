@@ -1,0 +1,13 @@
+@model QuanLySieuThi.Models.SupplierFormViewModel
+@{ ViewData["Title"] = Model.SupplierId == 0 ? "Thêm nhà cung cấp" : "Cập nhật nhà cung cấp"; }
+<div class="page-heading"><div><p class="eyebrow">QUẢN TRỊ ĐỐI TÁC</p><h1>@ViewData["Title"]</h1><p class="text-muted">Nhà cung cấp đã phát sinh phiếu nhập sẽ được ngừng thay vì xóa.</p></div><a asp-action="Suppliers" class="btn btn-outline-secondary">← Danh sách</a></div>
+<section class="panel form-panel">
+    @if (Model.SupplierId == 0)
+    {
+        <form asp-action="SupplierCreate" method="post">@Html.AntiForgeryToken()<partial name="_SupplierFields" model="Model" /></form>
+    }
+    else
+    {
+        <form asp-action="SupplierEdit" asp-route-id="@Model.SupplierId" method="post">@Html.AntiForgeryToken()<input asp-for="SupplierId" type="hidden" /><partial name="_SupplierFields" model="Model" /></form>
+    }
+</section>

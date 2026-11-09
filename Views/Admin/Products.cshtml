@@ -1,0 +1,20 @@
+@model IReadOnlyList<QuanLySieuThi.Models.ProductListItemViewModel>
+@{ ViewData["Title"] = "Quản lý sản phẩm"; }
+<div class="page-heading"><div><p class="eyebrow">QUẢN TRỊ DANH MỤC</p><h1>Quản lý sản phẩm</h1><p class="text-muted">Thêm, cập nhật, tìm kiếm và ngừng kinh doanh sản phẩm.</p></div><a asp-action="ProductCreate" class="btn btn-primary">＋ Thêm sản phẩm</a></div>
+@if (TempData["Success"] is string success) { <div class="alert alert-success py-2">@success</div> }
+<section class="metric-strip"><div><small>Sản phẩm đang kinh doanh</small><strong>@Model.Count(x => x.IsActive)</strong></div><div><small>Kết quả tìm thấy</small><strong>@Model.Count</strong></div><div><small>Sắp chạm ngưỡng tồn</small><strong class="text-warning">@Model.Count(x => x.IsActive && x.QuantityOnHand <= 5)</strong></div></section>
+<section class="panel table-panel">
+    <form asp-action="Products" method="get" class="toolbar">
+        <div class="search-box"><span>⌕</span><input name="search" value="@ViewBag.Search" placeholder="Tìm theo mã, tên hoặc barcode" /></div>
+        <select name="categoryId" class="form-select"><option value="">Tất cả danh mục</option>@foreach (var category in (IEnumerable<QuanLySieuThi.Models.Entities.Category>)ViewBag.Categories) { <option value="@category.CategoryId" selected="@(ViewBag.CategoryId == category.CategoryId)">@category.Name</option> }</select>
+        <label class="include-inactive"><input type="checkbox" name="includeInactive" value="true" checked="@(ViewBag.IncludeInactive == true)" /> Hiện cả sản phẩm đã ngừng</label>
+        <button type="submit" class="btn btn-outline-secondary">Lọc</button>
+    </form>
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Sản phẩm</th><th>Mã SKU</th><th>Danh mục</th><th>Giá bán</th><th>Tồn kho</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+    @if (Model.Count == 0) { <tr><td colspan="7" class="text-center text-muted py-4">Không tìm thấy sản phẩm phù hợp.</td></tr> }
+    @foreach (var item in Model)
+    {
+        <tr><td><strong>@item.Name</strong><small class="d-block text-muted">Đơn vị: @item.Unit</small></td><td>@item.Sku</td><td>@item.CategoryName</td><td>@item.SalePrice.ToString("N0") ₫</td><td>@item.QuantityOnHand.ToString("#,##0.###") @item.Unit</td><td><span class="status-pill @(item.IsActive ? "success" : "muted")">@(item.IsActive ? "Đang bán" : "Đã ngừng")</span></td><td><div class="row-actions"><a asp-action="ProductEdit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary">Sửa</a>@if (item.IsActive) { <form asp-action="ProductDeactivate" asp-route-id="@item.ProductId" method="post" onsubmit="return confirm('Ngừng kinh doanh sản phẩm này?')"><button type="submit" class="btn btn-sm btn-outline-danger">Ngừng</button></form> }</div></td></tr>
+    }
+    </tbody></table></div>
+</section>

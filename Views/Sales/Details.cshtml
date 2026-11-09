@@ -1,0 +1,44 @@
+@model QuanLySieuThi.Models.Entities.SalesInvoice
+@{ ViewData["Title"] = "Chi tiết hóa đơn"; }
+<div class="page-heading"><div><h1>Hóa đơn @Model.InvoiceNo</h1><p>@Model.Status · @Model.PaymentMethod</p></div><a asp-action="Invoices">Quay lại</a></div>
+@if (TempData["SaleMessage"] is string message)
+{
+    <div class="alert alert-info">@message</div>
+}
+<section class="panel p-3">
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>Sản phẩm</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+            <tbody>
+            @foreach (var line in Model.Details)
+            {
+                <tr><td>@line.ProductNameSnapshot</td><td>@line.Quantity</td><td>@line.UnitPrice.ToString("N2") ₫</td><td>@line.LineTotal.ToString("N2") ₫</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <p>Tạm tính @Model.Subtotal.ToString("N2") ₫ · Giảm @Model.DiscountAmount.ToString("N2") ₫</p>
+    <p><strong>Tổng thanh toán @Model.TotalAmount.ToString("N2") ₫</strong></p>
+    <p>@Model.Note</p>
+    @if (Model.Status is "AwaitingMoMo" or "Pending")
+    {
+        <div class="d-flex gap-2">
+            <form asp-action="Pay" asp-route-id="@Model.SalesInvoiceId" method="post"><button class="btn btn-primary">Mở thanh toán MoMo</button></form>
+            @if (Model.Status == "Pending")
+            {
+                <form asp-action="Reconcile" asp-route-id="@Model.SalesInvoiceId" method="post"><button class="btn btn-outline-secondary">Kiểm tra trạng thái MoMo</button></form>
+            }
+            else
+            {
+                <form asp-action="Discard" asp-route-id="@Model.SalesInvoiceId" method="post"><button class="btn btn-outline-secondary">Bỏ hóa đơn chưa thanh toán</button></form>
+            }
+        </div>
+    }
+    @if (Model.Status == "Completed" && User.IsInRole(RoleNames.Admin))
+    {
+        <form asp-action="Cancel" asp-route-id="@Model.SalesInvoiceId" method="post" class="d-flex gap-2">
+            <input name="refundReference" class="form-control" maxlength="150" placeholder="Mã hoặc chứng từ đã hoàn tiền thủ công" aria-label="Thông tin đã hoàn tiền" required />
+            <button class="btn btn-outline-danger text-nowrap">Xác nhận hủy và hoàn tồn</button>
+        </form>
+    }
+</section>

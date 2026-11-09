@@ -1,0 +1,34 @@
+@model IReadOnlyList<QuanLySieuThi.Models.Entities.PurchaseReceipt>
+@{
+    ViewData["Title"] = "Nhập hàng";
+    var suppliers = (IReadOnlyList<QuanLySieuThi.Models.Entities.Supplier>)ViewData["Suppliers"]!;
+}
+<div class="page-heading"><h1>Phiếu nhập hàng</h1></div>
+<section class="panel p-3 mb-3">
+    <form asp-action="Create" method="post" class="d-flex gap-2">
+        <select name="supplierId" class="form-select" required aria-label="Nhà cung cấp">
+            <option value="">Chọn nhà cung cấp</option>
+            @foreach (var supplier in suppliers)
+            {
+                <option value="@supplier.SupplierId">@supplier.Name</option>
+            }
+        </select>
+        <button class="btn btn-primary text-nowrap">Tạo phiếu</button>
+    </form>
+</section>
+<section class="panel table-responsive">
+    <table class="table">
+        <thead><tr><th>Số phiếu</th><th>Nhà cung cấp</th><th>Trạng thái</th><th>Tiền đặt hàng</th></tr></thead>
+        <tbody>
+        @foreach (var receipt in Model)
+        {
+            <tr>
+                <td><a asp-action="Details" asp-route-id="@receipt.PurchaseReceiptId">@receipt.ReceiptNo</a></td>
+                <td>@receipt.Supplier.Name</td>
+                <td>@(receipt.Status switch { "Draft" => "Nháp", "Partial" => "Đang nhận", "Received" => "Đã nhận đủ", _ => receipt.Status })</td>
+                <td>@receipt.TotalAmount.ToString("N2") ₫</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
