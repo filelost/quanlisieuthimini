@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using QuanLySieuThi.Data;
 using QuanLySieuThi.Models;
@@ -110,9 +111,14 @@ namespace QuanLySieuThi.Controllers
                 IsActive = model.IsActive,
                 Image = image
             };
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             db.Products.Add(product);
             db.Inventory.Add(new Models.Entities.Inventory { Product = product, QuantityOnHand = 0, UpdatedAt = DateTime.UtcNow });
             await db.SaveChangesAsync(cancellationToken);
+            db.AuditLogs.Add(CreateAudit("Product.Created", "Sản phẩm", product.ProductId.ToString(), product.Name,
+                $"SKU {product.Sku}; giá {product.SalePrice:N2}; tồn khởi tạo 0."));
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             TempData["Success"] = "Đã thêm sản phẩm mới.";
             return RedirectToAction(nameof(Products));
         }
@@ -157,6 +163,16 @@ namespace QuanLySieuThi.Controllers
                 return View("ProductForm", model);
             }
 
+            var changes = new List<string>();
+            AddChange(changes, "SKU", product.Sku, model.Sku.Trim());
+            AddChange(changes, "Tên", product.Name, model.Name.Trim());
+            AddChange(changes, "Mã vạch", product.Barcode, Normalize(model.Barcode));
+            AddChange(changes, "Danh mục ID", product.CategoryId.ToString(), model.CategoryId.ToString());
+            AddChange(changes, "Đơn vị", product.Unit, model.Unit.Trim());
+            AddChange(changes, "Giá", product.SalePrice.ToString("N2"), model.SalePrice.ToString("N2"));
+            AddChange(changes, "Ngưỡng tồn", product.ReorderLevel.ToString("0.###"), model.ReorderLevel.ToString("0.###"));
+            AddChange(changes, "Trạng thái", product.IsActive ? "Đang bán" : "Ngừng bán", model.IsActive ? "Đang bán" : "Ngừng bán");
+            if (image is not null) changes.Add("Ảnh: đã cập nhật");
             product.Sku = model.Sku.Trim(); product.Barcode = Normalize(model.Barcode); product.Name = model.Name.Trim();
             product.CategoryId = model.CategoryId; product.Unit = model.Unit.Trim(); product.SalePrice = model.SalePrice;
             product.ReorderLevel = model.ReorderLevel; product.IsActive = model.IsActive;
@@ -169,6 +185,11 @@ namespace QuanLySieuThi.Controllers
                     product.Image.Content = image.Content;
                     product.Image.ContentType = image.ContentType;
                 }
+            }
+            if (changes.Count > 0)
+            {
+                db.AuditLogs.Add(CreateAudit("Product.Updated", "Sản phẩm", product.ProductId.ToString(), product.Name,
+                    string.Join("; ", changes)));
             }
             await db.SaveChangesAsync(cancellationToken);
             TempData["Success"] = "Đã cập nhật sản phẩm.";
@@ -205,7 +226,10 @@ namespace QuanLySieuThi.Controllers
         {
             var product = await db.Products.FindAsync([id], cancellationToken);
             if (product is null) return NotFound();
+            if (!product.IsActive) return RedirectToAction(nameof(Products));
             product.IsActive = false;
+            db.AuditLogs.Add(CreateAudit("Product.Deactivated", "Sản phẩm", product.ProductId.ToString(), product.Name,
+                $"SKU {product.Sku}; ngừng kinh doanh."));
             await db.SaveChangesAsync(cancellationToken);
             TempData["Success"] = "Sản phẩm đã được ngừng kinh doanh; dữ liệu giao dịch được giữ nguyên.";
             return RedirectToAction(nameof(Products));
@@ -274,13 +298,18 @@ namespace QuanLySieuThi.Controllers
             if (!RoleNames.IsStaffRole(roleName))
                 return BadRequest();
 
-            var user = await db.Users.Include(user => user.Role).SingleOrDefaultAsync(
+            var user = await db.Users.Include(user => user.Role).Include(user => user.Employee).SingleOrDefaultAsync(
                 user => user.EmployeeId == id && (user.Role.Name == RoleNames.Employee
                     || user.Role.Name == RoleNames.Cashier || user.Role.Name == RoleNames.StockStaff), cancellationToken);
             if (user is null)
                 return NotFound();
 
+            var oldRoleName = user.Role.Name;
+            if (oldRoleName == roleName)
+                return RedirectToAction(nameof(Employees));
             user.Role = await db.Roles.SingleAsync(role => role.Name == roleName, cancellationToken);
+            db.AuditLogs.Add(CreateAudit("Employee.RoleChanged", "Nhân viên", id.ToString(),
+                user.Employee?.FullName ?? user.Username, $"Tài khoản {user.Username}; vai trò {oldRoleName} → {roleName}."));
             await db.SaveChangesAsync(cancellationToken);
             TempData["Success"] = "Đã cập nhật vai trò nhân viên.";
             return RedirectToAction(nameof(Employees));
@@ -416,5 +445,24 @@ namespace QuanLySieuThi.Controllers
         }
 
         private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        private AuditLog CreateAudit(string action, string targetType, string targetId, string targetName, string details)
+            => new()
+            {
+                ActorUserId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ? userId : null,
+                ActorUsername = User.Identity?.Name ?? "Không rõ",
+                ActionType = action,
+                TargetType = targetType,
+                TargetId = targetId,
+                TargetName = targetName,
+                Details = details.Length <= 1000 ? details : details[..1000],
+                CreatedAt = DateTime.UtcNow
+            };
+
+        private static void AddChange(List<string> changes, string label, string? oldValue, string? newValue)
+        {
+            if (!string.Equals(oldValue, newValue, StringComparison.Ordinal))
+                changes.Add($"{label}: {oldValue ?? "(trống)"} → {newValue ?? "(trống)"}");
+        }
     }
 }

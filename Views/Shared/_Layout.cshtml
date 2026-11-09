@@ -47,6 +47,7 @@
                 {
                     <div class="sidebar-label nav-section-label">QUẢN TRỊ</div>
                     <a asp-controller="Admin" asp-action="Employees"><span>♧</span>Nhân viên & tài khoản</a>
+                    <a asp-controller="AuditLogs" asp-action="Index"><span>◷</span>Nhật ký thao tác</a>
                     <a asp-controller="Screens" asp-action="Reports"><span>▥</span>Báo cáo</a>
                 }
                 @if (User.IsInRole(RoleNames.Customer))

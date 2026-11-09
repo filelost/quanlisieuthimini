@@ -24,6 +24,8 @@ try {
     if ($LASTEXITCODE) { throw 'Không cập nhật được bảng xử lý hàng nhập thiếu.' }
     sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/07_AddWarehouseAudit.sql
     if ($LASTEXITCODE) { throw 'Không cập nhật được thông tin đối soát kho.' }
+    sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/08_AddAuditLogs.sql
+    if ($LASTEXITCODE) { throw 'Không cập nhật được bảng nhật ký thao tác.' }
     sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/03_DemoData.sql
     if ($LASTEXITCODE) { throw 'Không nạp được dữ liệu mẫu.' }
 

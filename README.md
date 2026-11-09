@@ -37,6 +37,7 @@ Script 01 tạo schema lần đầu trên DB mới. Script 03 có thể chạy l
 API bán hàng dành cho Admin và Cashier. Gọi GET /api/sales/checkout-token sau khi đăng nhập, giữ cookie và gửi requestToken trong header có tên headerName khi gọi POST /api/sales/checkout với JSON. Ví dụ thân yêu cầu dùng requestId là UUID mới và productId lấy từ danh mục.
 
 Trong màn hình **Báo cáo**, Admin có thể tải workbook Excel gồm doanh thu theo ngày, hóa đơn, tồn kho hiện tại và 500 sản phẩm bán chạy nhất. Khoảng thời gian áp dụng cho doanh thu, hóa đơn và hàng bán chạy; tồn kho là ảnh chụp hiện tại. Doanh thu và hàng bán chạy chỉ tính hóa đơn đã hoàn tất.
+Màn hình **Nhật ký thao tác** dành cho Admin ghi người thực hiện, thời gian, đối tượng và nội dung thay đổi khi thêm/sửa/ngừng bán sản phẩm, điều chỉnh tồn, hủy hóa đơn và đổi quyền nhân viên. Trên database đã có, chạy `CoSoDuLieu/08_AddAuditLogs.sql` một lần trước khi sử dụng; script `LenhChay/Start-Demo.ps1` tự áp dụng script này.
 
 ```json
 {

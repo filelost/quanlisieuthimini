@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLySieuThi.Data;
 using QuanLySieuThi.Models;
+using QuanLySieuThi.Models.Entities;
 using QuanLySieuThi.Service;
 
 namespace QuanLySieuThi.Controllers
@@ -78,6 +79,17 @@ namespace QuanLySieuThi.Controllers
 
             db.StockTransactions.Add(StockMovement.Apply(stock, quantity, "Adjustment", "Inventory", id,
                 reason, int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)));
+            db.AuditLogs.Add(new AuditLog
+            {
+                ActorUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+                ActorUsername = User.Identity?.Name ?? "Không rõ",
+                ActionType = "Inventory.Adjusted",
+                TargetType = "Tồn kho",
+                TargetId = id.ToString(),
+                TargetName = $"{stock.Product.Sku} · {stock.Product.Name}",
+                Details = $"Số lượng {stock.QuantityOnHand:0.###} → {quantity:0.###}; lý do: {reason}",
+                CreatedAt = DateTime.UtcNow
+            });
             try
             {
                 await db.SaveChangesAsync(cancellationToken);

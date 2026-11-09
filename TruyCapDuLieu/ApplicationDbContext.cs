@@ -20,6 +20,7 @@ namespace QuanLySieuThi.Data
         public DbSet<Customer> Customers => Set<Customer>();
         public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
         public DbSet<SalesDetail> SalesDetails => Set<SalesDetail>();
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -181,6 +182,18 @@ namespace QuanLySieuThi.Data
                 e.Property(x => x.LineTotal).HasPrecision(18, 2);
                 e.HasOne(x => x.SalesInvoice).WithMany(x => x.Details).HasForeignKey(x => x.SalesInvoiceId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(x => x.Product).WithMany(x => x.SalesDetails).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<AuditLog>(e =>
+            {
+                e.ToTable("AuditLogs"); e.HasKey(x => x.AuditLogId);
+                e.Property(x => x.ActorUsername).HasMaxLength(60).IsRequired();
+                e.Property(x => x.ActionType).HasMaxLength(40).IsRequired();
+                e.Property(x => x.TargetType).HasMaxLength(40).IsRequired();
+                e.Property(x => x.TargetId).HasMaxLength(100).IsRequired();
+                e.Property(x => x.TargetName).HasMaxLength(180).IsRequired();
+                e.Property(x => x.Details).HasMaxLength(1000).IsRequired();
+                e.HasIndex(x => new { x.CreatedAt, x.AuditLogId });
+                e.HasIndex(x => new { x.ActionType, x.CreatedAt });
             });
         }
     }

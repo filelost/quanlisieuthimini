@@ -271,6 +271,8 @@ namespace QuanLySieuThi.Controllers
                 invoice.Status = "Cancelled";
                 var priorNote = invoice.Note ?? string.Empty;
                 invoice.Note = $"{priorNote[..Math.Min(300, priorNote.Length)]} | Hoàn tiền thủ công: {refundReference}".TrimStart(' ', '|');
+                db.AuditLogs.Add(CreateAudit("Invoice.Cancelled", "Hóa đơn", invoice.SalesInvoiceId.ToString(),
+                    invoice.InvoiceNo, $"Hủy hóa đơn đã hoàn tất; hoàn tồn kho; mã/chứng từ hoàn tiền: {refundReference}."));
                 await db.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return BackToInvoice(id, "Đã hủy hóa đơn và hoàn tồn kho.");
@@ -296,6 +298,8 @@ namespace QuanLySieuThi.Controllers
 
                 await RestoreStock(invoice, "Release", "Hủy trước khi mở thanh toán MoMo.", UserId(), cancellationToken);
                 invoice.Status = "Cancelled";
+                db.AuditLogs.Add(CreateAudit("Invoice.Discarded", "Hóa đơn", invoice.SalesInvoiceId.ToString(),
+                    invoice.InvoiceNo, "Bỏ hóa đơn chờ MoMo trước khi mở thanh toán; đã hoàn tồn kho."));
                 await db.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return BackToInvoice(id, "Đã bỏ hóa đơn chưa gửi sang MoMo và hoàn tồn.");
@@ -359,6 +363,19 @@ namespace QuanLySieuThi.Controllers
         }
 
         private int UserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        private AuditLog CreateAudit(string action, string targetType, string targetId, string targetName, string details)
+            => new()
+            {
+                ActorUserId = UserId(),
+                ActorUsername = User.Identity?.Name ?? "Không rõ",
+                ActionType = action,
+                TargetType = targetType,
+                TargetId = targetId,
+                TargetName = targetName,
+                Details = details,
+                CreatedAt = DateTime.UtcNow
+            };
 
         private IActionResult BackToSale(string message, bool asJson)
         {
