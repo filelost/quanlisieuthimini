@@ -1,7 +1,7 @@
 @model QuanLySieuThi.Models.ProductFormViewModel
 @{ ViewData["Title"] = Model.ProductId == 0 ? "Thêm sản phẩm" : "Cập nhật sản phẩm"; }
 <div class="page-heading"><div><p class="eyebrow">QUẢN TRỊ DANH MỤC</p><h1>@ViewData["Title"]</h1><p class="text-muted">Thông tin sản phẩm được kiểm tra ở máy chủ trước khi lưu.</p></div><a asp-action="Products" class="btn btn-outline-secondary">← Danh sách sản phẩm</a></div>
-<section class="panel form-panel">
+<section class="panel form-panel product-form">
     @if (Model.ProductId == 0)
     {
         <form asp-action="ProductCreate" method="post" enctype="multipart/form-data">

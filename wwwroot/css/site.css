@@ -10,3 +10,31 @@ a{text-decoration:none}
 .form-panel{max-width:850px}.row-actions{display:flex;gap:6px;align-items:center}.include-inactive{display:flex;align-items:center;gap:7px;white-space:nowrap;color:#728094;font-size:10px}.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:38px 15px;color:#8792a1;text-align:center}.empty-state>span{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:#f0f4f9;color:#8190a4;font-size:21px;margin-bottom:10px}.empty-state strong{color:#3d4b5d;font-size:12px}.empty-state p{font-size:10px;margin:5px 0 0}.admin-shortcuts{margin-top:16px}.shortcut-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.shortcut-grid>a{display:flex;flex-direction:column;gap:7px;padding:14px;border:1px solid #edf0f4;border-radius:9px;color:var(--ink)}.shortcut-grid>a:hover{border-color:#b9cdf5;background:#f9fbff}.shortcut-grid .metric-icon{margin-bottom:3px}.shortcut-grid strong{font-size:11px}.shortcut-grid small{font-size:9px;color:#8994a2}
 @media(max-width:1100px){.sidebar{width:210px;flex-basis:210px}.page-content{padding:24px 22px}.topbar{padding:0 22px}.metric-grid{grid-template-columns:repeat(2,1fr)}.dashboard-grid{grid-template-columns:1fr}.sales-layout{grid-template-columns:1fr}.cart-panel{max-width:none}.metric-strip{grid-template-columns:repeat(2,1fr)}.metric-strip>div:nth-child(2){border-right:0}.metric-strip>div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
 @media(max-width:700px){.app-shell{display:block}.sidebar{width:100%;padding:12px 14px;display:block}.brand{padding:0 3px 12px}.sidebar-label,.sidebar-bottom{display:none}.side-nav{flex-direction:row;overflow:auto;gap:4px}.side-nav .nav-section-label{display:none}.side-nav a{white-space:nowrap;padding:8px;font-size:10px}.side-nav a span{display:none}.topbar{height:56px;padding:0 15px}.topbar-title{font-size:10px}.page-content{padding:20px 14px}.page-heading{align-items:flex-start;flex-direction:column}.page-heading h1{font-size:22px}.heading-actions{width:100%}.heading-actions input{flex:1}.metric-grid,.three-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric-card{padding:13px;min-height:118px}.metric-card>strong{font-size:19px}.metric-top{font-size:10px}.metric-strip>div{padding:11px}.metric-strip strong{font-size:16px}.toolbar{flex-wrap:wrap}.toolbar .search-box{max-width:none;flex-basis:100%}.toolbar>.form-select,.toolbar>.form-control{flex:1;min-width:100px}.table-panel,.panel{padding:14px}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.report-filters{grid-template-columns:1fr 1fr}.report-filters>div:nth-child(3){grid-column:1/-1}.report-filters button{grid-column:1/-1}.app-footer{padding:12px 15px;gap:10px;font-size:9px}.app-footer span{display:none}.topbar-user>div:nth-child(2){display:none}.sales-layout{gap:12px}.shortcut-grid{grid-template-columns:repeat(2,1fr)}.include-inactive{white-space:normal}}
+
+/* Keep product names, prices, and quantities readable at the counter. */
+.product-catalog .table,
+#checkout .table {
+    font-size: 1rem;
+}
+
+.product-catalog .table thead th,
+#checkout .table thead th {
+    font-size: 0.875rem;
+}
+
+.product-catalog .text-muted,
+.product-catalog .status-pill,
+.product-catalog .toolbar .form-select,
+.product-catalog .search-box input,
+#checkout .toolbar > .form-control,
+.product-form .form-label,
+#checkout .form-label {
+    font-size: 0.9rem;
+}
+
+.product-form .form-control,
+.product-form .form-select,
+#checkout .form-control,
+#checkout .form-select {
+    font-size: 1rem;
+}
