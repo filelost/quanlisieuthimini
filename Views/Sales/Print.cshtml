@@ -1,0 +1,132 @@
+@model QuanLySieuThi.Models.Entities.SalesInvoice
+@using System.Globalization
+@{
+    Layout = null;
+    var paymentMethod = Model.PaymentMethod == "Cash" ? "Tiền mặt" : Model.PaymentMethod;
+    var status = Model.Status switch
+    {
+        "Completed" => "Đã thanh toán",
+        "AwaitingMoMo" => "Chờ mở thanh toán MoMo",
+        "Pending" => "Chờ xác nhận thanh toán",
+        "Cancelled" => "Đã hủy",
+        "Failed" => "Thanh toán thất bại",
+        _ => Model.Status
+    };
+    var invoiceTime = new DateTimeOffset(DateTime.SpecifyKind(Model.CreatedAt, DateTimeKind.Utc))
+        .ToOffset(TimeSpan.FromHours(7));
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hóa đơn @Model.InvoiceNo - Siêu Thị</title>
+    <style>
+        :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; color: #17212b; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f2f4f7; font-size: 14px; line-height: 1.5; }
+        .toolbar { max-width: 820px; margin: 20px auto 12px; display: flex; justify-content: flex-end; gap: 10px; }
+        .toolbar a, .toolbar button { border: 1px solid #cbd5e1; border-radius: 6px; padding: 9px 14px; background: white; color: #17212b; font-size: 14px; text-decoration: none; cursor: pointer; }
+        .toolbar button { background: #176b50; color: white; border-color: #176b50; }
+        .receipt { max-width: 820px; margin: 0 auto 28px; padding: 42px 48px; background: white; box-shadow: 0 3px 18px #17212b18; }
+        .receipt-header { display: flex; justify-content: space-between; gap: 24px; padding-bottom: 22px; border-bottom: 2px solid #176b50; }
+        .store-name { margin: 0; color: #176b50; font-size: 22px; font-weight: 750; }
+        .muted { color: #667085; }
+        h1 { margin: 0; font-size: 24px; text-align: right; }
+        .invoice-no { margin-top: 5px; text-align: right; overflow-wrap: anywhere; }
+        .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; padding: 20px 0; }
+        .meta div { min-width: 0; }
+        .meta strong { display: block; margin-bottom: 2px; font-size: 12px; color: #667085; font-weight: 500; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+        th { background: #f8faf9; font-size: 12px; text-align: left; }
+        .num { text-align: right; white-space: nowrap; }
+        .totals { width: min(100%, 360px); margin: 16px 0 0 auto; }
+        .totals td { border: 0; padding: 5px 0 5px 12px; }
+        .total { border-top: 1px solid #cbd5e1 !important; font-size: 17px; font-weight: 700; }
+        .note { margin-top: 18px; padding: 10px 12px; background: #f8faf9; overflow-wrap: anywhere; }
+        .thanks { margin-top: 36px; padding-top: 16px; border-top: 1px dashed #cbd5e1; text-align: center; color: #667085; }
+        @@media (max-width: 600px) {
+            .receipt { margin: 0; padding: 24px 18px; }
+            .toolbar { margin: 12px; }
+            .receipt-header { flex-direction: column; }
+            h1, .invoice-no { text-align: left; }
+            .meta { grid-template-columns: 1fr; }
+            th, td { padding: 8px 5px; }
+        }
+        @@page { size: A4 portrait; margin: 14mm; }
+        @@media print {
+            body { background: white; font-size: 11pt; }
+            .toolbar { display: none !important; }
+            .receipt { max-width: none; margin: 0; padding: 0; box-shadow: none; }
+            thead { display: table-header-group; }
+            tr, .totals, .meta { break-inside: avoid; }
+            .note { background: white; border: 1px solid #e5e7eb; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="toolbar" aria-label="Thao tác hóa đơn">
+        <a href="@Url.Action("Details", new { id = Model.SalesInvoiceId })">Quay lại hóa đơn</a>
+        <button type="button" onclick="window.print()">In / Lưu PDF</button>
+    </nav>
+    <main class="receipt">
+        <header class="receipt-header">
+            <div>
+                <p class="store-name">Siêu Thị Mini</p>
+                <div class="muted">Hóa đơn bán hàng</div>
+            </div>
+            <div>
+                <h1>HÓA ĐƠN</h1>
+                <div class="invoice-no">Mã: <strong>@Model.InvoiceNo</strong></div>
+            </div>
+        </header>
+
+        <section class="meta" aria-label="Thông tin hóa đơn">
+            <div><strong>Ngày giờ (UTC+7)</strong><time datetime="@invoiceTime.ToString("O", CultureInfo.InvariantCulture)">@invoiceTime.ToString("dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture)</time></div>
+            <div><strong>Khách hàng</strong>@(Model.Customer is { } customer ? $"{customer.FullName} ({customer.CustomerCode})" : "Khách lẻ")</div>
+            <div><strong>Thu ngân</strong>@(Model.CashierUser.Employee?.FullName ?? Model.CashierUser.Username)</div>
+            <div><strong>Thanh toán / Trạng thái</strong>@paymentMethod · @status</div>
+        </section>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã hàng</th>
+                    <th>Sản phẩm</th>
+                    <th class="num">SL</th>
+                    <th class="num">Đơn giá</th>
+                    <th class="num">Giảm giá</th>
+                    <th class="num">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var line in Model.Details)
+            {
+                <tr>
+                    <td>@line.SkuSnapshot</td>
+                    <td>@line.ProductNameSnapshot</td>
+                    <td class="num">@line.Quantity.ToString("0.###", CultureInfo.InvariantCulture)</td>
+                    <td class="num">@line.UnitPrice.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td>
+                    <td class="num">@line.DiscountAmount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td>
+                    <td class="num">@line.LineTotal.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <table class="totals" aria-label="Tổng tiền hóa đơn">
+            <tbody>
+                <tr><td>Tạm tính</td><td class="num">@Model.Subtotal.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td></tr>
+                <tr><td>Giảm giá hóa đơn</td><td class="num">−@Model.DiscountAmount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td></tr>
+                <tr><td class="total">Tổng thanh toán</td><td class="num total">@Model.TotalAmount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td></tr>
+            </tbody>
+        </table>
+        @if (!string.IsNullOrWhiteSpace(Model.Note))
+        {
+            <p class="note"><strong>Ghi chú:</strong> @Model.Note</p>
+        }
+        <footer class="thanks">Cảm ơn quý khách và hẹn gặp lại!</footer>
+    </main>
+</body>
+</html>

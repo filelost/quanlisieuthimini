@@ -3,7 +3,13 @@
     ViewData["Title"] = "Chi tiết hóa đơn";
     var paymentMethod = Model.PaymentMethod == "Cash" ? "Tiền mặt" : Model.PaymentMethod;
 }
-<div class="page-heading"><h1>Chi tiết hóa đơn</h1><a asp-action="Invoices">Quay lại</a></div>
+<div class="page-heading">
+    <h1>Chi tiết hóa đơn</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" asp-action="Print" asp-route-id="@Model.SalesInvoiceId">In / Xuất PDF</a>
+        <a asp-action="Invoices">Quay lại</a>
+    </div>
+</div>
 @if (TempData["SaleMessage"] is string message)
 {
     <div class="alert alert-info">@message</div>

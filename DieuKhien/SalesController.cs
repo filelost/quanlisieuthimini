@@ -166,6 +166,17 @@ namespace QuanLySieuThi.Controllers
             return invoice is null ? NotFound() : View(invoice);
         }
 
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> Print(long id, CancellationToken cancellationToken)
+        {
+            var invoice = await VisibleInvoices().AsNoTracking()
+                .Include(invoice => invoice.Customer)
+                .Include(invoice => invoice.CashierUser).ThenInclude(user => user.Employee)
+                .Include(invoice => invoice.Details.OrderBy(line => line.SalesDetailId))
+                .SingleOrDefaultAsync(invoice => invoice.SalesInvoiceId == id, cancellationToken);
+            return invoice is null ? NotFound() : View(invoice);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Pay(long id, CancellationToken cancellationToken)
         {
