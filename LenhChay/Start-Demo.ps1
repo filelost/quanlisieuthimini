@@ -14,17 +14,17 @@ try {
         try {
             (Get-Content CoSoDuLieu/01_CreateDatabase.sql -Raw).Replace('QuanLySieuThiDb', $Database) |
                 Set-Content -Encoding utf8 $schemaFile
-            sqlcmd -S $SqlInstance -E -C -b -f 65001 -i $schemaFile
+            sqlcmd -S $SqlInstance -E -C -b -i $schemaFile
             if ($LASTEXITCODE) { throw 'Không tạo được schema demo.' }
         } finally { Remove-Item -LiteralPath $schemaFile }
     }
-    sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/05_AddProductImages.sql
+    sqlcmd -S $SqlInstance -E -C -b -d $Database -i CoSoDuLieu/05_AddProductImages.sql
     if ($LASTEXITCODE) { throw 'Không cập nhật được bảng ảnh sản phẩm.' }
-    sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/06_AddPurchaseShortageActions.sql
+    sqlcmd -S $SqlInstance -E -C -b -d $Database -i CoSoDuLieu/06_AddPurchaseShortageActions.sql
     if ($LASTEXITCODE) { throw 'Không cập nhật được bảng xử lý hàng nhập thiếu.' }
-    sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/07_AddWarehouseAudit.sql
+    sqlcmd -S $SqlInstance -E -C -b -d $Database -i CoSoDuLieu/07_AddWarehouseAudit.sql
     if ($LASTEXITCODE) { throw 'Không cập nhật được thông tin đối soát kho.' }
-    sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/03_DemoData.sql
+    sqlcmd -S $SqlInstance -E -C -b -d $Database -i CoSoDuLieu/03_DemoData.sql
     if ($LASTEXITCODE) { throw 'Không nạp được dữ liệu mẫu.' }
 
     if (!$env:BootstrapAdmin__Username) { $env:BootstrapAdmin__Username = 'admin' }

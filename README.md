@@ -12,8 +12,8 @@ Cài SDK .NET 9, PowerShell 7, SQL Server Express và sqlcmd. Chạy từ thư m
 
 ```powershell
 dotnet --list-sdks
-sqlcmd -S '.\SQLEXPRESS' -E -C -b -f 65001 -i CoSoDuLieu/01_CreateDatabase.sql
-sqlcmd -S '.\SQLEXPRESS' -E -C -b -d QuanLySieuThiDb -f 65001 -i CoSoDuLieu/03_DemoData.sql
+sqlcmd -S '.\SQLEXPRESS' -E -C -b -i CoSoDuLieu/01_CreateDatabase.sql
+sqlcmd -S '.\SQLEXPRESS' -E -C -b -d QuanLySieuThiDb -i CoSoDuLieu/03_DemoData.sql
 
 $env:ConnectionStrings__DefaultConnection = 'Server=.\SQLEXPRESS;Database=QuanLySieuThiDb;Integrated Security=true;TrustServerCertificate=true'
 $env:BootstrapAdmin__Username = 'admin'
