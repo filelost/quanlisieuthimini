@@ -10,6 +10,7 @@ namespace QuanLySieuThi.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Product> Products => Set<Product>();
+        public DbSet<ProductImage> ProductImages => Set<ProductImage>();
         public DbSet<Supplier> Suppliers => Set<Supplier>();
         public DbSet<PurchaseReceipt> PurchaseReceipts => Set<PurchaseReceipt>();
         public DbSet<PurchaseDetail> PurchaseDetails => Set<PurchaseDetail>();
@@ -69,6 +70,14 @@ namespace QuanLySieuThi.Data
                 e.Property(x => x.Name).HasMaxLength(180).IsRequired(); e.Property(x => x.Unit).HasMaxLength(30).IsRequired();
                 e.Property(x => x.SalePrice).HasPrecision(18, 2); e.Property(x => x.ReorderLevel).HasPrecision(18, 3);
                 e.HasOne(x => x.Category).WithMany(x => x.Products).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<ProductImage>(e =>
+            {
+                e.ToTable("ProductImages");
+                e.HasKey(x => x.ProductId);
+                e.Property(x => x.ContentType).HasMaxLength(20);
+                e.HasOne<Product>().WithOne(product => product.Image)
+                    .HasForeignKey<ProductImage>(image => image.ProductId).OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<Supplier>(e =>
             {

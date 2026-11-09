@@ -4,14 +4,14 @@
 <section class="panel form-panel">
     @if (Model.ProductId == 0)
     {
-        <form asp-action="ProductCreate" method="post">
+        <form asp-action="ProductCreate" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <partial name="_ProductFields" model="Model" />
         </form>
     }
     else
     {
-        <form asp-action="ProductEdit" asp-route-id="@Model.ProductId" method="post">
+        <form asp-action="ProductEdit" asp-route-id="@Model.ProductId" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <input asp-for="ProductId" type="hidden" />
             <partial name="_ProductFields" model="Model" />

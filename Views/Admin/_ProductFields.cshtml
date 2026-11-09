@@ -8,6 +8,16 @@
     <div><label asp-for="Unit" class="form-label"></label><input asp-for="Unit" class="form-control" placeholder="Cái, hộp, kg..." /><span asp-validation-for="Unit" class="text-danger small"></span></div>
     <div><label asp-for="SalePrice" class="form-label"></label><div class="input-group"><input asp-for="SalePrice" class="form-control" type="number" min="0" step="100" /><span class="input-group-text">₫</span></div><span asp-validation-for="SalePrice" class="text-danger small"></span></div>
     <div><label asp-for="ReorderLevel" class="form-label"></label><input asp-for="ReorderLevel" class="form-control" type="number" min="0" step="0.001" /><span asp-validation-for="ReorderLevel" class="text-danger small"></span></div>
+    <div class="form-span">
+        <label asp-for="ImageFile" class="form-label"></label>
+        @if (Model.HasImage)
+        {
+            <img src="@Url.Action("Show", "ProductImages", new { id = Model.ProductId })" alt="Ảnh hiện tại của @Model.Name" width="96" height="96" class="d-block rounded border object-fit-contain mb-2" />
+        }
+        <input asp-for="ImageFile" type="file" class="form-control" accept="image/jpeg,image/png" aria-describedby="product-image-help" />
+        <div id="product-image-help" class="form-text">JPEG hoặc PNG, tối đa 2 MB. @(Model.HasImage ? "Để trống để giữ ảnh hiện tại." : "")</div>
+        <span asp-validation-for="ImageFile" class="text-danger small"></span>
+    </div>
     <div class="form-span"><label class="form-check"><input asp-for="IsActive" class="form-check-input" /><span class="form-check-label">Đang kinh doanh</span></label></div>
 </div>
 <div class="d-flex justify-content-end gap-2 mt-4"><a asp-action="Products" class="btn btn-outline-secondary">Hủy</a><button type="submit" class="btn btn-primary">Lưu sản phẩm</button></div>

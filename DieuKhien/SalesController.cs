@@ -24,8 +24,12 @@ namespace QuanLySieuThi.Controllers
                 .OrderBy(product => product.Name).ToListAsync(cancellationToken);
             var customers = await db.Customers.AsNoTracking().Where(customer => customer.IsActive)
                 .OrderBy(customer => customer.FullName).ToListAsync(cancellationToken);
+            var productIds = products.Select(product => product.ProductId).ToArray();
+            var imageIds = await db.ProductImages.Where(image => productIds.Contains(image.ProductId))
+                .Select(image => image.ProductId).ToListAsync(cancellationToken);
             return View(new CheckoutViewModel(Guid.NewGuid(), products, customers,
-                configuration.GetSection("Promotions").GetChildren().Select(promotion => promotion.Key).ToList(), momo.Configured));
+                configuration.GetSection("Promotions").GetChildren().Select(promotion => promotion.Key).ToList(),
+                momo.Configured, imageIds.ToHashSet()));
         }
 
         [HttpPost]

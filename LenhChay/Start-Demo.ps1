@@ -18,6 +18,8 @@ try {
             if ($LASTEXITCODE) { throw 'Không tạo được schema demo.' }
         } finally { Remove-Item -LiteralPath $schemaFile }
     }
+    sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/05_AddProductImages.sql
+    if ($LASTEXITCODE) { throw 'Không cập nhật được bảng ảnh sản phẩm.' }
     sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/03_DemoData.sql
     if ($LASTEXITCODE) { throw 'Không nạp được dữ liệu mẫu.' }
 

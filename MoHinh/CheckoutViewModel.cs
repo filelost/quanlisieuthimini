@@ -18,5 +18,6 @@ namespace QuanLySieuThi.Models
     }
 
     public sealed record CheckoutViewModel(Guid RequestId, IReadOnlyList<Product> Products,
-        IReadOnlyList<Customer> Customers, IReadOnlyList<string> PromotionCodes, bool MomoEnabled);
+        IReadOnlyList<Customer> Customers, IReadOnlyList<string> PromotionCodes, bool MomoEnabled,
+        IReadOnlySet<int> ProductImageIds);
 }

@@ -6,6 +6,8 @@
 2. Cập nhật database cũ sang các vai trò `Admin`, `Cashier`, `StockStaff`, `Customer` bằng `02_UpdateRoles.sql`. Ứng dụng cũng chuẩn hóa các role cũ khi khởi động.
 3. Đặt hai biến môi trường `BootstrapAdmin__Username` và `BootstrapAdmin__Password` trước lần chạy đầu tiên cần tạo tài khoản Admin. Ứng dụng chỉ tạo tài khoản ban đầu nếu chưa có người dùng nào mang role Admin; mật khẩu được băm bằng `PasswordHasher` và không ghi vào file cấu hình.
 
+Chạy `05_AddProductImages.sql` trên cơ sở dữ liệu đã tạo trước khi có tính năng ảnh sản phẩm. Script demo tự thực hiện bước này.
+
 PowerShell:
 
 ```powershell

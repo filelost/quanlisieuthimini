@@ -70,7 +70,8 @@ namespace QuanLySieuThi.Controllers
                 SalePrice = x.SalePrice,
                 QuantityOnHand = x.Inventory == null ? 0 : x.Inventory.QuantityOnHand,
                 Unit = x.Unit,
-                IsActive = x.IsActive
+                IsActive = x.IsActive,
+                HasImage = x.Image != null
             }).ToListAsync(cancellationToken);
 
             return View(products);
@@ -86,9 +87,11 @@ namespace QuanLySieuThi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(3 * 1024 * 1024)]
         public async Task<IActionResult> ProductCreate(ProductFormViewModel model, CancellationToken cancellationToken)
         {
             await ValidateProductKeysAsync(model, null, cancellationToken);
+            var image = await ReadProductImageAsync(model.ImageFile, cancellationToken);
             if (!ModelState.IsValid)
             {
                 await LoadCategoriesAsync(model, cancellationToken);
@@ -104,7 +107,8 @@ namespace QuanLySieuThi.Controllers
                 Unit = model.Unit.Trim(),
                 SalePrice = model.SalePrice,
                 ReorderLevel = model.ReorderLevel,
-                IsActive = model.IsActive
+                IsActive = model.IsActive,
+                Image = image
             };
             db.Products.Add(product);
             db.Inventory.Add(new Models.Entities.Inventory { Product = product, QuantityOnHand = 0, UpdatedAt = DateTime.UtcNow });
@@ -128,7 +132,8 @@ namespace QuanLySieuThi.Controllers
                 Unit = product.Unit,
                 SalePrice = product.SalePrice,
                 ReorderLevel = product.ReorderLevel,
-                IsActive = product.IsActive
+                IsActive = product.IsActive,
+                HasImage = await db.ProductImages.AnyAsync(image => image.ProductId == id, cancellationToken)
             };
             await LoadCategoriesAsync(model, cancellationToken);
             return View("ProductForm", model);
@@ -136,12 +141,16 @@ namespace QuanLySieuThi.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(3 * 1024 * 1024)]
         public async Task<IActionResult> ProductEdit(int id, ProductFormViewModel model, CancellationToken cancellationToken)
         {
             if (id != model.ProductId) return BadRequest();
-            var product = await db.Products.FindAsync([id], cancellationToken);
+            var product = await db.Products.Include(item => item.Image)
+                .SingleOrDefaultAsync(item => item.ProductId == id, cancellationToken);
             if (product is null) return NotFound();
             await ValidateProductKeysAsync(model, id, cancellationToken);
+            var image = await ReadProductImageAsync(model.ImageFile, cancellationToken);
+            model.HasImage = product.Image is not null;
             if (!ModelState.IsValid)
             {
                 await LoadCategoriesAsync(model, cancellationToken);
@@ -151,9 +160,43 @@ namespace QuanLySieuThi.Controllers
             product.Sku = model.Sku.Trim(); product.Barcode = Normalize(model.Barcode); product.Name = model.Name.Trim();
             product.CategoryId = model.CategoryId; product.Unit = model.Unit.Trim(); product.SalePrice = model.SalePrice;
             product.ReorderLevel = model.ReorderLevel; product.IsActive = model.IsActive;
+            if (image is not null)
+            {
+                if (product.Image is null)
+                    product.Image = image;
+                else
+                {
+                    product.Image.Content = image.Content;
+                    product.Image.ContentType = image.ContentType;
+                }
+            }
             await db.SaveChangesAsync(cancellationToken);
             TempData["Success"] = "Đã cập nhật sản phẩm.";
             return RedirectToAction(nameof(Products));
+        }
+
+        private async Task<ProductImage?> ReadProductImageAsync(IFormFile? file, CancellationToken cancellationToken)
+        {
+            if (file is null) return null;
+            if (file.Length is <= 0 or > 2 * 1024 * 1024)
+            {
+                ModelState.AddModelError(nameof(ProductFormViewModel.ImageFile), "Ảnh phải có dung lượng tối đa 2 MB.");
+                return null;
+            }
+
+            using var buffer = new MemoryStream((int)file.Length);
+            await file.CopyToAsync(buffer, cancellationToken);
+            var content = buffer.ToArray();
+            var contentType = content.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 })
+                ? "image/png"
+                : content.AsSpan().StartsWith(new byte[] { 255, 216, 255 }) ? "image/jpeg" : null;
+            if (contentType is null)
+            {
+                ModelState.AddModelError(nameof(ProductFormViewModel.ImageFile), "Chọn ảnh PNG hoặc JPEG hợp lệ.");
+                return null;
+            }
+
+            return new ProductImage { Content = content, ContentType = contentType };
         }
 
         [HttpPost]

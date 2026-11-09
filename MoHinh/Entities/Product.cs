@@ -14,6 +14,7 @@ namespace QuanLySieuThi.Models.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Category Category { get; set; } = null!;
         public Inventory? Inventory { get; set; }
+        public ProductImage? Image { get; set; }
         public ICollection<PurchaseDetail> PurchaseDetails { get; set; } = new List<PurchaseDetail>();
         public ICollection<SalesDetail> SalesDetails { get; set; } = new List<SalesDetail>();
         public ICollection<StockTransaction> StockTransactions { get; set; } = new List<StockTransaction>();

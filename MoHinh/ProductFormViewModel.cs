@@ -36,6 +36,9 @@ namespace QuanLySieuThi.Models
         public decimal ReorderLevel { get; set; }
 
         public bool IsActive { get; set; } = true;
+        [Display(Name = "Ảnh sản phẩm")]
+        public IFormFile? ImageFile { get; set; }
+        public bool HasImage { get; set; }
         public IEnumerable<SelectListItem> Categories { get; set; } = [];
     }
 
@@ -49,5 +52,6 @@ namespace QuanLySieuThi.Models
         public decimal QuantityOnHand { get; init; }
         public string Unit { get; init; } = string.Empty;
         public bool IsActive { get; init; }
+        public bool HasImage { get; init; }
     }
 }

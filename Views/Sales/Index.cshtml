@@ -26,7 +26,14 @@
             {
                 var quantity = product.Inventory!.QuantityOnHand;
                 <tr data-product="@product.ProductId" data-barcode="@product.Barcode" data-sku="@product.Sku" data-name="@product.Name">
-                    <td>@product.Name</td><td>@product.Sku</td><td>@product.SalePrice.ToString("N2") ₫</td><td>@quantity.ToString("0.###")</td>
+                    <td>
+                        @if (Model.ProductImageIds.Contains(product.ProductId))
+                        {
+                            <partial name="_ProductThumbnail" model="product.ProductId" />
+                        }
+                        @product.Name
+                    </td>
+                    <td>@product.Sku</td><td>@product.SalePrice.ToString("N2") ₫</td><td>@quantity.ToString("0.###")</td>
                     <td><input class="form-control" type="number" min="0" step="0.001" max="@Math.Min(quantity, 1_000_000m).ToString(System.Globalization.CultureInfo.InvariantCulture)" aria-label="Số lượng @product.Name" /></td>
                 </tr>
             }

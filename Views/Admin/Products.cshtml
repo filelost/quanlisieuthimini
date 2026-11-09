@@ -14,7 +14,15 @@
     @if (Model.Count == 0) { <tr><td colspan="7" class="text-center text-muted py-4">Không tìm thấy sản phẩm phù hợp.</td></tr> }
     @foreach (var item in Model)
     {
-        <tr><td><strong>@item.Name</strong><small class="d-block text-muted">Đơn vị: @item.Unit</small></td><td>@item.Sku</td><td>@item.CategoryName</td><td>@item.SalePrice.ToString("N0") ₫</td><td>@item.QuantityOnHand.ToString("#,##0.###") @item.Unit</td><td><span class="status-pill @(item.IsActive ? "success" : "muted")">@(item.IsActive ? "Đang bán" : "Đã ngừng")</span></td><td><div class="row-actions"><a asp-action="ProductEdit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary">Sửa</a>@if (item.IsActive) { <form asp-action="ProductDeactivate" asp-route-id="@item.ProductId" method="post" onsubmit="return confirm('Ngừng kinh doanh sản phẩm này?')"><button type="submit" class="btn btn-sm btn-outline-danger">Ngừng</button></form> }</div></td></tr>
+        <tr><td>
+            <div class="d-flex align-items-center">
+                @if (item.HasImage)
+                {
+                    <partial name="_ProductThumbnail" model="item.ProductId" />
+                }
+                <div><strong>@item.Name</strong><small class="d-block text-muted">Đơn vị: @item.Unit</small></div>
+            </div>
+        </td><td>@item.Sku</td><td>@item.CategoryName</td><td>@item.SalePrice.ToString("N0") ₫</td><td>@item.QuantityOnHand.ToString("#,##0.###") @item.Unit</td><td><span class="status-pill @(item.IsActive ? "success" : "muted")">@(item.IsActive ? "Đang bán" : "Đã ngừng")</span></td><td><div class="row-actions"><a asp-action="ProductEdit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary">Sửa</a>@if (item.IsActive) { <form asp-action="ProductDeactivate" asp-route-id="@item.ProductId" method="post" onsubmit="return confirm('Ngừng kinh doanh sản phẩm này?')"><button type="submit" class="btn btn-sm btn-outline-danger">Ngừng</button></form> }</div></td></tr>
     }
     </tbody></table></div>
 </section>
