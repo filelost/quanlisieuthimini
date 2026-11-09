@@ -1,0 +1,230 @@
+{
+  "info": {
+    "name": "Mini Supermarket",
+    "description": "Set username and password as local collection variables. Clear the cookie jar for baseUrl before running. Keep cookies enabled and disable automatic redirects for the login POST.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5233"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "API anonymous",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get login token",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/Auth/Login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "const match = pm.response.text().match(/name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"/);",
+              "pm.test('CSRF token exists', () => pm.expect(match).to.not.equal(null));",
+              "if (match) pm.collectionVariables.set('csrf', match[1]);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sign in",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/Auth/Login",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "Username",
+              "value": "{{username}}",
+              "type": "text"
+            },
+            {
+              "key": "Password",
+              "value": "{{password}}",
+              "type": "text"
+            },
+            {
+              "key": "__RequestVerificationToken",
+              "value": "{{csrf}}",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 302\", () => pm.response.to.have.status(302));"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "followRedirects": false
+      }
+    },
+    {
+      "name": "Find demo product",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/products?search=DEMO-001"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test('Seed SKU exists', () => pm.expect(pm.response.json().some(p => p.sku === 'DEMO-001')).to.equal(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Low stock",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/inventory?lowStock=true"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sales report",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/reports/sales"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject reversed dates",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/reports/sales?from=2026-12-31&to=2026-01-01"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get checkout CSRF token",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/sales/checkout-token"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Checkout token available', () => pm.response.to.have.status(200));",
+              "const token = pm.response.json();",
+              "pm.collectionVariables.set('checkoutHeader', token.headerName);",
+              "pm.collectionVariables.set('checkoutToken', token.requestToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject empty checkout",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/sales/checkout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "{{checkoutHeader}}",
+            "value": "{{checkoutToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"requestId\":\"{{$guid}}\",\"paymentMethod\":\"Cash\",\"lines\":[]}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Empty checkout rejected', () => pm.response.to.have.status(400));",
+              "pm.test('Returns business validation message', () => pm.expect(pm.response.json().message).to.be.a('string'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

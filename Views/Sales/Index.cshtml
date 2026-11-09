@@ -1,0 +1,101 @@
+@model CheckoutViewModel
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Bán hàng";
+    var promotionSettings = Configuration.GetSection("Promotions");
+}
+<div class="page-heading">
+    <div><h1>Quầy thu ngân</h1><p class="text-muted">Quét mã hoặc tìm sản phẩm, nhập số lượng và chọn cách thanh toán.</p></div>
+    <a asp-action="Invoices" class="btn btn-outline-primary">@(User.IsInRole(RoleNames.Admin) ? "Tra cứu hóa đơn" : "Hóa đơn của tôi")</a>
+</div>
+@if (TempData["SaleMessage"] is string message)
+{
+    <div class="alert alert-info">@message</div>
+}
+<form asp-action="Checkout" method="post" class="panel p-3" id="checkout">
+    <input type="hidden" name="RequestId" value="@Model.RequestId" />
+    <div class="toolbar">
+        <input type="search" class="form-control" id="catalog-search" placeholder="Quét mã vạch hoặc tìm sản phẩm" aria-label="Tìm sản phẩm" />
+        <span id="catalog-message" role="status"></span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>Sản phẩm</th><th>Mã hàng</th><th>Đơn giá</th><th>Tồn khả dụng</th><th>Số lượng bán</th></tr></thead>
+            <tbody>
+            @if (Model.Products.Count == 0)
+            {
+                <tr><td colspan="5" class="text-center text-muted">Chưa có sản phẩm còn tồn để bán.</td></tr>
+            }
+            @foreach (var product in Model.Products)
+            {
+                var quantity = product.Inventory!.QuantityOnHand;
+                <tr data-product="@product.ProductId" data-barcode="@product.Barcode" data-sku="@product.Sku" data-name="@product.Name" data-price="@product.SalePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                    <td>
+                        @if (Model.ProductImageIds.Contains(product.ProductId))
+                        {
+                            <partial name="_ProductThumbnail" model="product.ProductId" />
+                        }
+                        @product.Name
+                    </td>
+                    <td>@product.Sku</td><td>@product.SalePrice.ToString("N2") ₫</td><td>@quantity.ToString("0.###")</td>
+                    <td><input class="form-control" type="number" min="0" step="0.001" max="@Math.Min(quantity, 1_000_000m).ToString(System.Globalization.CultureInfo.InvariantCulture)" aria-label="Số lượng @product.Name" /></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="row g-3">
+        <div class="col-md">
+            <label class="form-label" for="customer">Khách hàng</label>
+            <select class="form-select" id="customer" name="CustomerId">
+                <option value="">Khách lẻ</option>
+                @foreach (var customer in Model.Customers)
+                {
+                    <option value="@customer.CustomerId">@customer.FullName · @customer.Phone</option>
+                }
+            </select>
+        </div>
+        <div class="col-md">
+            <label class="form-label" for="promotion">Khuyến mãi hóa đơn</label>
+            <select class="form-select" id="promotion" name="PromotionCode">
+                <option value="">Không áp dụng</option>
+                @foreach (var code in Model.PromotionCodes)
+                {
+                    <option value="@code"
+                        data-type="@(promotionSettings[$"{code}:Type"])"
+                        data-value="@(promotionSettings.GetValue<decimal>($"{code}:Value"))">@code</option>
+                }
+            </select>
+        </div>
+        <div class="col-md">
+            <label class="form-label" for="payment">Thanh toán</label>
+            <select class="form-select" id="payment" name="PaymentMethod">
+                <option value="Cash">Tiền mặt</option>
+                @if (Model.MomoEnabled)
+                {
+                    <option value="MoMo">MoMo</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="checkout-summary mt-3">
+        <div class="checkout-summary-row"><span>Tạm tính</span><strong id="preview-subtotal">0 ₫</strong></div>
+        <div class="checkout-summary-row"><span>Giảm giá</span><strong id="preview-discount">0 ₫</strong></div>
+        <div class="checkout-summary-row checkout-grand-total"><span>Tổng thanh toán</span><strong id="preview-total">0 ₫</strong></div>
+        <div id="cash-payment-fields" class="row g-3 mt-1">
+            <div class="col-md-6">
+                <label class="form-label" for="cash-received">Tiền khách đưa (₫)</label>
+                <input class="form-control" id="cash-received" name="CashReceived" type="number" min="0" step="0.01" value="0" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="cash-change">Tiền thừa</label>
+                <output class="form-control bg-light" id="cash-change" aria-live="polite">0 ₫</output>
+            </div>
+        </div>
+        <p id="payment-hint" class="small text-muted mt-2 mb-0">Nhập số tiền khách đưa để tính tiền thừa.</p>
+    </div>
+    <button class="btn btn-primary mt-3" type="submit" disabled="@(Model.Products.Count == 0)">Hoàn tất thanh toán</button>
+</form>
+@section Scripts {
+    <script src="~/js/checkout.js" asp-append-version="true"></script>
+}

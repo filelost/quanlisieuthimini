@@ -1,0 +1,97 @@
+@model QuanLySieuThi.Models.Entities.SalesInvoice
+@{
+    ViewData["Title"] = "Chi tiết hóa đơn";
+    var paymentMethod = Model.PaymentMethod == "Cash" ? "Tiền mặt" : Model.PaymentMethod;
+}
+<div class="page-heading"><h1>Chi tiết hóa đơn</h1><a asp-action="Invoices">Quay lại</a></div>
+@if (TempData["SaleMessage"] is string message)
+{
+    <div class="alert alert-info">@message</div>
+}
+<section class="panel p-3">
+    <h2 class="h5">Thông tin hóa đơn</h2>
+    <dl class="row">
+        <dt class="col-sm-4">Mã hóa đơn</dt>
+        <dd class="col-sm-8 text-break">@Model.InvoiceNo</dd>
+        <dt class="col-sm-4">Ngày giờ lập (UTC+7)</dt>
+        <dd class="col-sm-8"><partial name="_VietnamDateTime" model="Model.CreatedAt" /></dd>
+        <dt class="col-sm-4">Khách hàng</dt>
+        <dd class="col-sm-8">@(Model.Customer is { } customer ? $"{customer.FullName} ({customer.CustomerCode})" : "Khách lẻ")</dd>
+        <dt class="col-sm-4">Thu ngân</dt>
+        <dd class="col-sm-8">@(Model.CashierUser.Employee?.FullName ?? Model.CashierUser.Username)</dd>
+        <dt class="col-sm-4">Phương thức thanh toán</dt>
+        <dd class="col-sm-8">@paymentMethod</dd>
+        @if (Model.PaymentMethod == "Cash")
+        {
+            <dt class="col-sm-4">Tiền khách đưa</dt>
+            <dd class="col-sm-8">@Model.CashReceived.ToString("N0") ₫</dd>
+            <dt class="col-sm-4">Tiền thừa</dt>
+            <dd class="col-sm-8">@Model.ChangeAmount.ToString("N0") ₫</dd>
+        }
+        <dt class="col-sm-4">Trạng thái</dt>
+        <dd class="col-sm-8"><partial name="_InvoiceStatus" model="Model.Status" /></dd>
+    </dl>
+
+    <h2 class="h5">Chi tiết hàng hóa</h2>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Mã hàng</th>
+                    <th scope="col">Sản phẩm</th>
+                    <th scope="col" class="text-end">Số lượng</th>
+                    <th scope="col" class="text-end">Đơn giá</th>
+                    <th scope="col" class="text-end">Giảm giá</th>
+                    <th scope="col" class="text-end">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var line in Model.Details)
+            {
+                <tr>
+                    <td>@line.SkuSnapshot</td>
+                    <td>@line.ProductNameSnapshot</td>
+                    <td class="text-end">@line.Quantity.ToString("0.###")</td>
+                    <td class="text-end text-nowrap">@line.UnitPrice.ToString("N2") ₫</td>
+                    <td class="text-end text-nowrap">@line.DiscountAmount.ToString("N2") ₫</td>
+                    <td class="text-end text-nowrap">@line.LineTotal.ToString("N2") ₫</td>
+                </tr>
+            }
+            </tbody>
+            <tfoot>
+                <tr><th scope="row" colspan="5" class="text-end">Tạm tính</th><td class="text-end text-nowrap">@Model.Subtotal.ToString("N2") ₫</td></tr>
+                <tr><th scope="row" colspan="5" class="text-end">Giảm giá hóa đơn</th><td class="text-end text-nowrap">@Model.DiscountAmount.ToString("N2") ₫</td></tr>
+                <tr class="fw-bold"><th scope="row" colspan="5" class="text-end">Tổng thanh toán</th><td class="text-end text-nowrap">@Model.TotalAmount.ToString("N2") ₫</td></tr>
+            </tfoot>
+        </table>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.Note))
+    {
+        <p><strong>Ghi chú</strong> @Model.Note</p>
+    }
+    @if (Model.Status == "Completed")
+    {
+        <a class="btn btn-primary" asp-action="Print" asp-route-id="@Model.SalesInvoiceId" target="_blank" rel="noopener">In hóa đơn</a>
+    }
+    @if (Model.Status is "AwaitingMoMo" or "Pending")
+    {
+        <div class="d-flex gap-2">
+            <form asp-action="Pay" asp-route-id="@Model.SalesInvoiceId" method="post"><button class="btn btn-primary">Mở thanh toán MoMo</button></form>
+            @if (Model.Status == "Pending")
+            {
+                <form asp-action="Reconcile" asp-route-id="@Model.SalesInvoiceId" method="post"><button class="btn btn-outline-secondary">Kiểm tra trạng thái MoMo</button></form>
+            }
+            else
+            {
+                <form asp-action="Discard" asp-route-id="@Model.SalesInvoiceId" method="post"><button class="btn btn-outline-secondary">Bỏ hóa đơn chưa thanh toán</button></form>
+            }
+        </div>
+    }
+    @if (Model.Status == "Completed" && User.IsInRole(RoleNames.Admin))
+    {
+        <form asp-action="Cancel" asp-route-id="@Model.SalesInvoiceId" method="post" class="d-flex gap-2">
+            <input name="refundReference" class="form-control" maxlength="150" placeholder="Mã hoặc chứng từ đã hoàn tiền thủ công" aria-label="Thông tin đã hoàn tiền" required />
+            <button class="btn btn-outline-danger text-nowrap">Xác nhận hủy và hoàn tồn</button>
+        </form>
+    }
+</section>
