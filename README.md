@@ -1,3 +1,7 @@
+# Ở phần này đã cập nhật chức năng xem báo cáo chi tiết doanh thu theo ngày, tuần, tháng
+
+
+
 # Hệ thống quản lý siêu thị mini
 
 ASP.NET Core 10, EF Core, SQL Server, Razor HTML, CSS, JavaScript và Bootstrap. Giao diện dùng cookie đăng nhập cùng origin với API. Giao diện Razor gửi biểu mẫu MVC có CSRF token. Web API cung cấp tra cứu sản phẩm, tồn kho, báo cáo và ghi giao dịch bán hàng JSON dùng chung nghiệp vụ với POS.
