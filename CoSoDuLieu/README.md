@@ -10,6 +10,8 @@ Chạy `05_AddProductImages.sql` trên cơ sở dữ liệu đã tạo trước 
 
 Chạy `06_AddPurchaseShortageActions.sql` để bổ sung lịch sử xử lý hàng nhập thiếu cho cơ sở dữ liệu đang sử dụng. Script demo tự thực hiện bước này.
 
+Chạy `07_AddWarehouseAudit.sql` để bổ sung thời điểm lập phiếu, người thêm dòng hàng và mã chứng từ giao hàng cho cơ sở dữ liệu đang sử dụng. Script demo tự thực hiện bước này. Các phiếu cũ thiếu thông tin sẽ hiển thị “Chưa ghi nhận”.
+
 PowerShell:
 
 ```powershell

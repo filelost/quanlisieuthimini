@@ -6,6 +6,7 @@ namespace QuanLySieuThi.Models.Entities
         public string ReceiptNo { get; set; } = string.Empty;
         public int SupplierId { get; set; }
         public int CreatedByUserId { get; set; }
+        public DateTime? CreatedAt { get; set; }
         public DateTime ReceivedAt { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = "Draft";
         public decimal TotalAmount { get; set; }

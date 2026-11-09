@@ -94,6 +94,7 @@ CREATE TABLE dbo.PurchaseReceipts (
     ReceiptNo nvarchar(40) NOT NULL,
     SupplierId int NOT NULL,
     CreatedByUserId int NOT NULL,
+    CreatedAt datetime2 NULL,
     ReceivedAt datetime2 NOT NULL CONSTRAINT DF_PurchaseReceipts_ReceivedAt DEFAULT (SYSUTCDATETIME()),
     Status nvarchar(20) NOT NULL CONSTRAINT DF_PurchaseReceipts_Status DEFAULT (N'Draft'),
     TotalAmount decimal(18,2) NOT NULL CONSTRAINT DF_PurchaseReceipts_TotalAmount DEFAULT (0),
@@ -112,10 +113,13 @@ CREATE TABLE dbo.PurchaseDetails (
     Quantity decimal(18,3) NOT NULL,
     UnitCost decimal(18,2) NOT NULL,
     LineTotal decimal(18,2) NOT NULL,
+    CreatedAt datetime2 NULL,
+    CreatedByUserId int NULL,
     CONSTRAINT CK_PurchaseDetails_Quantity CHECK (Quantity > 0),
     CONSTRAINT CK_PurchaseDetails_UnitCost CHECK (UnitCost >= 0),
     CONSTRAINT FK_PurchaseDetails_PurchaseReceipts FOREIGN KEY (PurchaseReceiptId) REFERENCES dbo.PurchaseReceipts(PurchaseReceiptId) ON DELETE CASCADE,
-    CONSTRAINT FK_PurchaseDetails_Products FOREIGN KEY (ProductId) REFERENCES dbo.Products(ProductId)
+    CONSTRAINT FK_PurchaseDetails_Products FOREIGN KEY (ProductId) REFERENCES dbo.Products(ProductId),
+    CONSTRAINT FK_PurchaseDetails_Users FOREIGN KEY (CreatedByUserId) REFERENCES dbo.Users(UserId)
 );
 
 CREATE TABLE dbo.PurchaseShortageActions (
@@ -153,6 +157,7 @@ CREATE TABLE dbo.StockTransactions (
     QuantityAfter decimal(18,3) NOT NULL,
     ReferenceType nvarchar(30) NOT NULL,
     ReferenceId bigint NULL,
+    SupplierDocumentNo nvarchar(150) NULL,
     Reason nvarchar(300) NULL,
     CreatedByUserId int NOT NULL,
     CreatedAt datetime2 NOT NULL CONSTRAINT DF_StockTransactions_CreatedAt DEFAULT (SYSUTCDATETIME()),

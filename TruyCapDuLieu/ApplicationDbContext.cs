@@ -108,6 +108,7 @@ namespace QuanLySieuThi.Data
                 e.Property(x => x.UnitCost).HasPrecision(18, 2); e.Property(x => x.LineTotal).HasPrecision(18, 2);
                 e.HasOne(x => x.PurchaseReceipt).WithMany(x => x.Details).HasForeignKey(x => x.PurchaseReceiptId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(x => x.Product).WithMany(x => x.PurchaseDetails).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.CreatedByUser).WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<PurchaseShortageAction>(e =>
             {
@@ -136,6 +137,7 @@ namespace QuanLySieuThi.Data
                 });
                 e.HasKey(x => x.StockTransactionId); e.Property(x => x.Type).HasMaxLength(20).IsRequired();
                 e.Property(x => x.ReferenceType).HasMaxLength(30).IsRequired(); e.Property(x => x.Reason).HasMaxLength(300);
+                e.Property(x => x.SupplierDocumentNo).HasMaxLength(150);
                 e.Property(x => x.QuantityChange).HasPrecision(18, 3); e.Property(x => x.QuantityBefore).HasPrecision(18, 3);
                 e.Property(x => x.QuantityAfter).HasPrecision(18, 3); e.HasIndex(x => new { x.ProductId, x.CreatedAt });
                 e.HasOne(x => x.Product).WithMany(x => x.StockTransactions).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);

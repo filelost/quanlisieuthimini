@@ -20,6 +20,7 @@ namespace QuanLySieuThi.Controllers
             ViewData["Suppliers"] = await db.Suppliers.AsNoTracking().Where(supplier => supplier.IsActive)
                 .OrderBy(supplier => supplier.Name).ToListAsync(cancellationToken);
             return View(await db.PurchaseReceipts.AsNoTracking().Include(receipt => receipt.Supplier)
+                .Include(receipt => receipt.CreatedByUser)
                 .OrderByDescending(receipt => receipt.PurchaseReceiptId).ToListAsync(cancellationToken));
         }
 
@@ -33,7 +34,8 @@ namespace QuanLySieuThi.Controllers
             {
                 ReceiptNo = $"PN-{Guid.NewGuid():N}",
                 SupplierId = supplierId,
-                CreatedByUserId = UserId()
+                CreatedByUserId = UserId(),
+                CreatedAt = DateTime.UtcNow
             };
             db.PurchaseReceipts.Add(receipt);
             await db.SaveChangesAsync(cancellationToken);
@@ -42,12 +44,14 @@ namespace QuanLySieuThi.Controllers
 
         public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
         {
-            var receipt = await ReceiptQuery().AsNoTracking().SingleOrDefaultAsync(
+            var receipt = await ReceiptQuery().AsNoTracking().Include(item => item.CreatedByUser)
+                .Include(item => item.Details).ThenInclude(line => line.CreatedByUser).SingleOrDefaultAsync(
                 receipt => receipt.PurchaseReceiptId == id, cancellationToken);
             if (receipt is null)
                 return NotFound();
 
             var deliveries = await ReceiptMovements(id).AsNoTracking().Include(movement => movement.Product)
+                .Include(movement => movement.CreatedByUser)
                 .OrderByDescending(movement => movement.StockTransactionId).ToListAsync(cancellationToken);
             var received = deliveries.GroupBy(movement => movement.ProductId)
                 .ToDictionary(group => group.Key, group => group.Sum(movement => movement.QuantityChange));
@@ -81,7 +85,9 @@ namespace QuanLySieuThi.Controllers
                     ProductId = productId,
                     Quantity = quantity,
                     UnitCost = unitCost,
-                    LineTotal = total
+                    LineTotal = total,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedByUserId = UserId()
                 });
                 receipt.TotalAmount += total;
                 return "Đã thêm sản phẩm.";
@@ -90,11 +96,12 @@ namespace QuanLySieuThi.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Receive(int id, int lineId, decimal quantity, decimal expectedReceived,
-            string? reason, CancellationToken cancellationToken)
+            string? reason, string? supplierDocumentNo, CancellationToken cancellationToken)
         {
             reason = reason?.Trim();
-            if (!ModelState.IsValid || !ValidQuantity(quantity) || reason?.Length > 300)
-                return Back(id, "Nhập số lượng thực nhận và ghi chú hợp lệ.");
+            supplierDocumentNo = supplierDocumentNo?.Trim();
+            if (!ModelState.IsValid || !ValidQuantity(quantity) || reason?.Length > 300 || supplierDocumentNo?.Length > 150)
+                return Back(id, "Nhập số lượng thực nhận, mã chứng từ và ghi chú hợp lệ.");
 
             return await UpdateReceipt(id, async receipt =>
             {
@@ -124,10 +131,12 @@ namespace QuanLySieuThi.Controllers
                 if (stock.QuantityOnHand + quantity >= 1_000_000_000_000_000m)
                     return "Số lượng tồn vượt giới hạn.";
 
-                db.StockTransactions.Add(StockMovement.Apply(stock, stock.QuantityOnHand + quantity,
-                    "Purchase", "PurchaseReceipt", id, reason, UserId()));
+                var movement = StockMovement.Apply(stock, stock.QuantityOnHand + quantity,
+                    "Purchase", "PurchaseReceipt", id, reason, UserId());
+                movement.SupplierDocumentNo = string.IsNullOrEmpty(supplierDocumentNo) ? null : supplierDocumentNo;
+                db.StockTransactions.Add(movement);
                 received[line.ProductId] = previous + quantity;
-                receipt.ReceivedAt = DateTime.UtcNow;
+                receipt.ReceivedAt = movement.CreatedAt;
                 SetReceiptStatus(receipt, received, closed);
                 return quantity < remaining
                     ? $"Đã cập nhật tồn kho theo số lượng thực nhận. Còn thiếu {remaining - quantity:0.###} {line.Product.Unit}. Chọn cách xử lý phần thiếu trên phiếu."

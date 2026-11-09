@@ -10,6 +10,7 @@ namespace QuanLySieuThi.Models.Entities
         public decimal QuantityAfter { get; set; }
         public string ReferenceType { get; set; } = string.Empty;
         public long? ReferenceId { get; set; }
+        public string? SupplierDocumentNo { get; set; }
         public string? Reason { get; set; }
         public int CreatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

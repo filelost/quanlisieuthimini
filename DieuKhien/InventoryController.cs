@@ -36,9 +36,16 @@ namespace QuanLySieuThi.Controllers
                 return NotFound();
 
             ViewData["Product"] = product.Name;
-            return View(await db.StockTransactions.AsNoTracking().Include(movement => movement.CreatedByUser)
+            var movements = await db.StockTransactions.AsNoTracking().Include(movement => movement.CreatedByUser)
                 .Where(movement => movement.ProductId == id).OrderByDescending(movement => movement.StockTransactionId)
-                .Take(100).ToListAsync(cancellationToken));
+                .Take(100).ToListAsync(cancellationToken);
+            var receiptIds = movements.Where(movement => movement.ReferenceType == "PurchaseReceipt"
+                    && movement.ReferenceId is > 0 and <= int.MaxValue)
+                .Select(movement => (int)movement.ReferenceId!.Value).Distinct().ToArray();
+            ViewData["ReceiptNumbers"] = await db.PurchaseReceipts.AsNoTracking()
+                .Where(receipt => receiptIds.Contains(receipt.PurchaseReceiptId))
+                .ToDictionaryAsync(receipt => receipt.PurchaseReceiptId, receipt => receipt.ReceiptNo, cancellationToken);
+            return View(movements);
         }
 
         [HttpPost]

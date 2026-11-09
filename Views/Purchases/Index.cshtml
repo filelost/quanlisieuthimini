@@ -25,18 +25,29 @@
 </section>
 <section class="panel table-responsive">
     <table class="table">
-        <thead><tr><th>Số phiếu</th><th>Nhà cung cấp</th><th>Trạng thái</th><th>Tiền đặt hàng</th></tr></thead>
+        <thead><tr><th>Số phiếu</th><th>Nhà cung cấp</th><th>Lập phiếu (UTC+7)</th><th>Người lập</th><th>Trạng thái</th><th>Tiền đặt hàng</th></tr></thead>
         <tbody>
         @if (Model.Count == 0)
         {
-            <tr><td colspan="4" class="text-center text-muted">Chưa có phiếu nhập hàng.</td></tr>
+            <tr><td colspan="6" class="text-center text-muted">Chưa có phiếu nhập hàng.</td></tr>
         }
         @foreach (var receipt in Model)
         {
             <tr>
                 <td><a asp-action="Details" asp-route-id="@receipt.PurchaseReceiptId">@receipt.ReceiptNo</a></td>
                 <td>@receipt.Supplier.Name</td>
-                <td>@(receipt.Status switch { "Draft" => "Nháp", "Partial" => "Còn hàng chờ nhận", "Received" => "Đã nhận đủ", "ClosedShort" => "Đã chốt thiếu", _ => receipt.Status })</td>
+                <td>
+                    @if (receipt.CreatedAt is DateTime createdAt)
+                    {
+                        <partial name="_VietnamDateTime" model="createdAt" />
+                    }
+                    else
+                    {
+                        <span class="text-muted">Chưa ghi nhận</span>
+                    }
+                </td>
+                <td>@receipt.CreatedByUser.Username</td>
+                <td><partial name="_ReceiptStatus" model="receipt.Status" /></td>
                 <td>@receipt.TotalAmount.ToString("N2") ₫</td>
             </tr>
         }
