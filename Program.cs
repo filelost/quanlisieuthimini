@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -20,6 +21,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
+            var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var role = context.Principal?.FindFirstValue(ClaimTypes.Role);
+            if (int.TryParse(userId, out var id)
+                && await authService.IsSessionValidAsync(id, role, context.HttpContext.RequestAborted))
+                return;
+
+            context.RejectPrincipal();
+            await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        };
         options.Events.OnRedirectToLogin = context => ApiStatusOrRedirect(context, 401);
         options.Events.OnRedirectToAccessDenied = context => ApiStatusOrRedirect(context, 403);
     });

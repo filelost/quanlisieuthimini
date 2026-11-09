@@ -1,15 +1,6 @@
 @model QuanLySieuThi.Models.Entities.SalesInvoice
 @{
     ViewData["Title"] = "Chi tiết hóa đơn";
-    var status = Model.Status switch
-    {
-        "Completed" => "Đã thanh toán",
-        "AwaitingMoMo" => "Chờ mở thanh toán MoMo",
-        "Pending" => "Chờ xác nhận thanh toán",
-        "Cancelled" => "Đã hủy",
-        "Failed" => "Thanh toán thất bại",
-        _ => Model.Status
-    };
     var paymentMethod = Model.PaymentMethod == "Cash" ? "Tiền mặt" : Model.PaymentMethod;
 }
 <div class="page-heading"><h1>Chi tiết hóa đơn</h1><a asp-action="Invoices">Quay lại</a></div>
@@ -23,7 +14,7 @@
         <dt class="col-sm-4">Mã hóa đơn</dt>
         <dd class="col-sm-8 text-break">@Model.InvoiceNo</dd>
         <dt class="col-sm-4">Ngày giờ lập (UTC+7)</dt>
-        <dd class="col-sm-8"><partial name="_InvoiceCreatedAt" model="Model.CreatedAt" /></dd>
+        <dd class="col-sm-8"><partial name="_VietnamDateTime" model="Model.CreatedAt" /></dd>
         <dt class="col-sm-4">Khách hàng</dt>
         <dd class="col-sm-8">@(Model.Customer is { } customer ? $"{customer.FullName} ({customer.CustomerCode})" : "Khách lẻ")</dd>
         <dt class="col-sm-4">Thu ngân</dt>
@@ -31,7 +22,7 @@
         <dt class="col-sm-4">Phương thức thanh toán</dt>
         <dd class="col-sm-8">@paymentMethod</dd>
         <dt class="col-sm-4">Trạng thái</dt>
-        <dd class="col-sm-8">@status</dd>
+        <dd class="col-sm-8"><partial name="_InvoiceStatus" model="Model.Status" /></dd>
     </dl>
 
     <h2 class="h5">Chi tiết hàng hóa</h2>

@@ -59,11 +59,11 @@
     <section class="panel p-3 mt-3 table-responsive">
         <h2>Lịch sử nhận hàng</h2>
         <table class="table">
-            <thead><tr><th>Thời điểm (UTC)</th><th>Sản phẩm</th><th>Số lượng đạt</th><th>Ghi chú</th></tr></thead>
+            <thead><tr><th>Thời điểm (UTC+7)</th><th>Sản phẩm</th><th>Số lượng đạt</th><th>Ghi chú</th></tr></thead>
             <tbody>
             @foreach (var delivery in Model.Deliveries)
             {
-                <tr><td>@delivery.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td><td>@delivery.Product.Name</td><td>@delivery.QuantityChange</td><td>@delivery.Reason</td></tr>
+                <tr><td><partial name="_VietnamDateTime" model="delivery.CreatedAt" /></td><td>@delivery.Product.Name</td><td>@delivery.QuantityChange</td><td>@delivery.Reason</td></tr>
             }
             </tbody>
         </table>

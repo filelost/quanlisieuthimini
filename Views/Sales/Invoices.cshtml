@@ -1,6 +1,6 @@
 @model IReadOnlyList<QuanLySieuThi.Models.Entities.SalesInvoice>
-@{ ViewData["Title"] = "Hóa đơn bán hàng"; }
-<div class="page-heading"><h1>Hóa đơn bán hàng</h1><a class="btn btn-primary" asp-action="Index">Bán hàng</a></div>
+@{ ViewData["Title"] = User.IsInRole(RoleNames.Admin) ? "Hóa đơn bán hàng" : "Hóa đơn của tôi"; }
+<div class="page-heading"><h1>@ViewData["Title"]</h1><a class="btn btn-primary" asp-action="Index">Bán hàng</a></div>
 <section class="panel p-3">
     <form method="get" asp-action="Invoices" class="toolbar">
         <input class="form-control" name="search" value="@ViewData["Search"]" placeholder="Mã hóa đơn" aria-label="Mã hóa đơn" />
@@ -10,14 +10,18 @@
         <table class="table">
             <thead><tr><th>Mã hóa đơn</th><th>Ngày giờ lập (UTC+7)</th><th>Khách hàng</th><th>Thanh toán</th><th>Trạng thái</th><th>Tổng tiền</th></tr></thead>
             <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr><td colspan="6" class="text-center text-muted">Không tìm thấy hóa đơn.</td></tr>
+            }
             @foreach (var invoice in Model)
             {
                 <tr>
                     <td><a asp-action="Details" asp-route-id="@invoice.SalesInvoiceId">@invoice.InvoiceNo</a></td>
-                    <td class="text-nowrap"><partial name="_InvoiceCreatedAt" model="invoice.CreatedAt" /></td>
+                    <td class="text-nowrap"><partial name="_VietnamDateTime" model="invoice.CreatedAt" /></td>
                     <td>@(invoice.Customer?.FullName ?? "Khách lẻ")</td>
-                    <td>@invoice.PaymentMethod</td>
-                    <td>@invoice.Status</td>
+                    <td>@(invoice.PaymentMethod == "Cash" ? "Tiền mặt" : invoice.PaymentMethod)</td>
+                    <td><partial name="_InvoiceStatus" model="invoice.Status" /></td>
                     <td class="text-nowrap">@invoice.TotalAmount.ToString("N2") ₫</td>
                 </tr>
             }

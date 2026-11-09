@@ -1,6 +1,6 @@
 @model QuanLySieuThi.Models.EmployeeAccountFormViewModel
 @{ ViewData["Title"] = "Thêm nhân viên"; }
-<div class="page-heading"><div><p class="eyebrow">QUẢN TRỊ NGƯỜI DÙNG</p><h1>Thêm nhân viên</h1><p class="text-muted">Tạo hồ sơ và tài khoản với vai trò Nhân viên.</p></div><a asp-action="Employees" class="btn btn-outline-secondary">← Danh sách nhân viên</a></div>
+<div class="page-heading"><div><p class="eyebrow">QUẢN TRỊ NGƯỜI DÙNG</p><h1>Thêm nhân viên</h1><p class="text-muted">Tạo tài khoản Thu ngân hoặc Nhân viên kho theo công việc được giao.</p></div><a asp-action="Employees" class="btn btn-outline-secondary">← Danh sách nhân viên</a></div>
 <section class="panel form-panel"><form asp-action="EmployeeCreate" method="post">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
@@ -9,8 +9,8 @@
             <label asp-for="RoleName" class="form-label">Vai trò</label>
             <select asp-for="RoleName" class="form-select">
                 <option value="">Chọn vai trò</option>
-                <option value="Cashier">Nhân viên bán hàng</option>
-                <option value="StockStaff">Nhân viên kho</option>
+                <option value="@RoleNames.Cashier">Thu ngân</option>
+                <option value="@RoleNames.StockStaff">Nhân viên kho</option>
             </select>
             <span asp-validation-for="RoleName" class="text-danger"></span>
         </div>

@@ -13,6 +13,7 @@ namespace QuanLySieuThi.Models
 
     public sealed class RecentInvoiceViewModel
     {
+        public long SalesInvoiceId { get; init; }
         public string InvoiceNo { get; init; } = string.Empty;
         public DateTime CreatedAt { get; init; }
         public string CashierName { get; init; } = string.Empty;

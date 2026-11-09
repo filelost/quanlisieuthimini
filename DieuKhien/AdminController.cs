@@ -15,19 +15,24 @@ namespace QuanLySieuThi.Controllers
         public async Task<IActionResult> Dashboard(CancellationToken cancellationToken)
         {
             var today = DateTime.UtcNow.Date;
+            var tomorrow = today.AddDays(1);
+            var completedToday = db.SalesInvoices.Where(invoice => invoice.CreatedAt >= today
+                && invoice.CreatedAt < tomorrow && invoice.Status == "Completed");
             var model = new AdminDashboardViewModel
             {
                 ProductCount = await db.Products.CountAsync(x => x.IsActive, cancellationToken),
                 EmployeeCount = await db.Employees.CountAsync(x => x.IsActive, cancellationToken),
                 CustomerCount = await db.Customers.CountAsync(x => x.IsActive, cancellationToken),
-                LowStockCount = await db.Inventory.CountAsync(x => x.Product.IsActive && x.QuantityOnHand <= x.Product.ReorderLevel, cancellationToken),
-                TodayInvoiceCount = await db.SalesInvoices.CountAsync(x => x.CreatedAt >= today && x.Status == "Completed", cancellationToken),
-                TodayRevenue = await db.SalesInvoices.Where(x => x.CreatedAt >= today && x.Status == "Completed")
+                LowStockCount = await db.Products.CountAsync(product => product.IsActive
+                    && (product.Inventory == null || product.Inventory.QuantityOnHand <= product.ReorderLevel), cancellationToken),
+                TodayInvoiceCount = await completedToday.CountAsync(cancellationToken),
+                TodayRevenue = await completedToday
                     .SumAsync(x => (decimal?)x.TotalAmount, cancellationToken) ?? 0,
                 RecentInvoices = await db.SalesInvoices.AsNoTracking()
-                    .OrderByDescending(x => x.CreatedAt).Take(8)
+                    .OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.SalesInvoiceId).Take(8)
                     .Select(x => new RecentInvoiceViewModel
                     {
+                        SalesInvoiceId = x.SalesInvoiceId,
                         InvoiceNo = x.InvoiceNo,
                         CreatedAt = x.CreatedAt,
                         CashierName = x.CashierUser.Employee == null ? x.CashierUser.Username : x.CashierUser.Employee.FullName,

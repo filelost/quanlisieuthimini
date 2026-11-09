@@ -7,13 +7,13 @@
 @if (Model.Count == 0) { <tr><td colspan="8" class="text-center text-muted py-4">Chưa có nhân viên. Tạo tài khoản đầu tiên để bắt đầu.</td></tr> }
 @foreach (var employee in Model)
 {
-    <tr><td><strong>@employee.FullName</strong></td><td>@employee.EmployeeCode</td><td>@(employee.Username ?? "Chưa cấp tài khoản")</td><td>@(employee.Position ?? "—")</td><td>@(employee.Phone ?? "—")</td><td>@if (employee.RoleName is "Employee" or "Cashier" or "StockStaff")
+    <tr><td><strong>@employee.FullName</strong></td><td>@employee.EmployeeCode</td><td>@(employee.Username ?? "Chưa cấp tài khoản")</td><td>@(employee.Position ?? "—")</td><td>@(employee.Phone ?? "—")</td><td>@if (employee.RoleName == RoleNames.Employee || RoleNames.IsStaffRole(employee.RoleName))
 {
     <form asp-action="EmployeeChangeRole" asp-route-id="@employee.EmployeeId" method="post" class="d-flex gap-2">
         <select name="roleName" class="form-select form-select-sm" aria-label="Vai trò" required>
-            <option value="" selected="@(employee.RoleName == "Employee")" disabled>Chưa phân vai</option>
-            <option value="Cashier" selected="@(employee.RoleName == "Cashier")">Bán hàng</option>
-            <option value="StockStaff" selected="@(employee.RoleName == "StockStaff")">Kho</option>
+            <option value="" selected="@(employee.RoleName == RoleNames.Employee)" disabled>Chưa phân vai</option>
+            <option value="@RoleNames.Cashier" selected="@(employee.RoleName == RoleNames.Cashier)">Thu ngân</option>
+            <option value="@RoleNames.StockStaff" selected="@(employee.RoleName == RoleNames.StockStaff)">Nhân viên kho</option>
         </select>
         <button class="btn btn-sm btn-outline-secondary" type="submit">Lưu</button>
     </form>

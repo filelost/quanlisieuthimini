@@ -7,10 +7,16 @@ namespace QuanLySieuThi.Service
 {
     public sealed class AuthService(ApplicationDbContext db, IPasswordHasher<User> passwordHasher) : IAuthService
     {
+        private IQueryable<User> ActiveAccounts() => db.Users.Where(user =>
+            user.IsActive && user.Role.IsActive && (user.Employee == null || user.Employee.IsActive));
+
+        public Task<bool> IsSessionValidAsync(int userId, string? roleName, CancellationToken cancellationToken)
+            => ActiveAccounts().AnyAsync(user => user.UserId == userId && user.Role.Name == roleName, cancellationToken);
+
         public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword,
             CancellationToken cancellationToken)
         {
-            var eligibleUsers = db.Users.Where(user => user.UserId == userId && user.IsActive && user.Role.IsActive);
+            var eligibleUsers = ActiveAccounts().Where(user => user.UserId == userId);
             var user = await eligibleUsers.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
             if (user is null || passwordHasher.VerifyHashedPassword(user, user.PasswordHash, currentPassword)
                 == PasswordVerificationResult.Failed)
@@ -26,10 +32,10 @@ namespace QuanLySieuThi.Service
         public async Task<User?> AuthenticateAsync(string username, string password, CancellationToken cancellationToken = default)
         {
             var normalizedUsername = username.Trim();
-            var user = await db.Users.Include(x => x.Role)
+            var user = await ActiveAccounts().Include(x => x.Role)
                 .FirstOrDefaultAsync(x => x.Username == normalizedUsername, cancellationToken);
 
-            if (user is null || !user.IsActive || !user.Role.IsActive)
+            if (user is null)
                 return null;
 
             var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);

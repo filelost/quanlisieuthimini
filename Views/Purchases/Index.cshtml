@@ -3,9 +3,12 @@
     ViewData["Title"] = "Nhập hàng";
     var suppliers = (IReadOnlyList<QuanLySieuThi.Models.Entities.Supplier>)ViewData["Suppliers"]!;
 }
-<div class="page-heading"><h1>Phiếu nhập hàng</h1></div>
+<div class="page-heading">
+    <div><h1>Phiếu nhập hàng</h1><p class="text-muted">Lập phiếu theo nhà cung cấp và theo dõi số lượng đã nhận.</p></div>
+    <a asp-controller="Inventory" asp-action="Index" class="btn btn-outline-primary">Xem tồn kho</a>
+</div>
 <section class="panel p-3 mb-3">
-    <form asp-action="Create" method="post" class="d-flex gap-2">
+    <form asp-action="Create" method="post" class="d-flex gap-2 flex-wrap flex-sm-nowrap">
         <select name="supplierId" class="form-select" required aria-label="Nhà cung cấp">
             <option value="">Chọn nhà cung cấp</option>
             @foreach (var supplier in suppliers)
@@ -13,13 +16,21 @@
                 <option value="@supplier.SupplierId">@supplier.Name</option>
             }
         </select>
-        <button class="btn btn-primary text-nowrap">Tạo phiếu</button>
+        <button class="btn btn-primary text-nowrap" disabled="@(suppliers.Count == 0)">Tạo phiếu</button>
     </form>
+    @if (suppliers.Count == 0)
+    {
+        <p class="text-muted mt-2 mb-0">Chưa có nhà cung cấp đang hoạt động để lập phiếu.</p>
+    }
 </section>
 <section class="panel table-responsive">
     <table class="table">
         <thead><tr><th>Số phiếu</th><th>Nhà cung cấp</th><th>Trạng thái</th><th>Tiền đặt hàng</th></tr></thead>
         <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="4" class="text-center text-muted">Chưa có phiếu nhập hàng.</td></tr>
+        }
         @foreach (var receipt in Model)
         {
             <tr>
