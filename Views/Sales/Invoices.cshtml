@@ -8,11 +8,18 @@
     </form>
     <div class="table-responsive">
         <table class="table">
-            <thead><tr><th>Mã</th><th>Khách hàng</th><th>Thanh toán</th><th>Trạng thái</th><th>Tổng tiền</th></tr></thead>
+            <thead><tr><th>Mã hóa đơn</th><th>Ngày giờ lập (UTC+7)</th><th>Khách hàng</th><th>Thanh toán</th><th>Trạng thái</th><th>Tổng tiền</th></tr></thead>
             <tbody>
             @foreach (var invoice in Model)
             {
-                <tr><td><a asp-action="Details" asp-route-id="@invoice.SalesInvoiceId">@invoice.InvoiceNo</a></td><td>@(invoice.Customer?.FullName ?? "Khách lẻ")</td><td>@invoice.PaymentMethod</td><td>@invoice.Status</td><td>@invoice.TotalAmount.ToString("N2") ₫</td></tr>
+                <tr>
+                    <td><a asp-action="Details" asp-route-id="@invoice.SalesInvoiceId">@invoice.InvoiceNo</a></td>
+                    <td class="text-nowrap"><partial name="_InvoiceCreatedAt" model="invoice.CreatedAt" /></td>
+                    <td>@(invoice.Customer?.FullName ?? "Khách lẻ")</td>
+                    <td>@invoice.PaymentMethod</td>
+                    <td>@invoice.Status</td>
+                    <td class="text-nowrap">@invoice.TotalAmount.ToString("N2") ₫</td>
+                </tr>
             }
             </tbody>
         </table>

@@ -154,7 +154,10 @@ namespace QuanLySieuThi.Controllers
 
         public async Task<IActionResult> Details(long id, CancellationToken cancellationToken)
         {
-            var invoice = await VisibleInvoices().AsNoTracking().Include(invoice => invoice.Details)
+            var invoice = await VisibleInvoices().AsNoTracking()
+                .Include(invoice => invoice.Customer)
+                .Include(invoice => invoice.CashierUser).ThenInclude(user => user.Employee)
+                .Include(invoice => invoice.Details.OrderBy(line => line.SalesDetailId))
                 .SingleOrDefaultAsync(invoice => invoice.SalesInvoiceId == id, cancellationToken);
             return invoice is null ? NotFound() : View(invoice);
         }
