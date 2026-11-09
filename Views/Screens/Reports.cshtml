@@ -4,8 +4,12 @@
 <form id="sales-report" class="row g-3 mb-4">
     <label class="col-auto">Từ ngày <input name="from" type="date" class="form-control"></label>
     <label class="col-auto">Đến ngày <input name="to" type="date" class="form-control"></label>
-    <div class="col-auto align-self-end"><button class="btn btn-primary">Xem báo cáo</button></div>
+    <div class="col-auto align-self-end d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Xem báo cáo</button>
+        <button type="button" id="export-excel" class="btn btn-outline-success">Xuất Excel</button>
+    </div>
 </form>
+<p class="text-muted">Tải workbook Excel gồm doanh thu, hóa đơn, tồn kho và 500 mặt hàng bán chạy nhất trong kỳ.</p>
 <p id="report-status" role="status"></p>
 <div class="table-responsive">
     <table class="table">

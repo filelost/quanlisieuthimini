@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.22" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
     <Compile Remove="DieuKhien/WeatherForecastController.cs;WeatherForecast.cs" />

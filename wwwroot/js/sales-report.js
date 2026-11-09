@@ -1,7 +1,16 @@
 const reportForm = document.querySelector("#sales-report");
 const reportStatus = document.querySelector("#report-status");
 const reportDays = document.querySelector("#report-days");
+const exportExcelButton = document.querySelector("#export-excel");
 const reportCurrency = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
+
+exportExcelButton.addEventListener("click", () => {
+    const parameters = new URLSearchParams();
+    for (const [key, value] of new FormData(reportForm)) {
+        if (value) parameters.set(key, value);
+    }
+    window.location.assign("/Reports/ExportExcel?" + parameters);
+});
 
 reportForm.addEventListener("submit", async event => {
     event.preventDefault();
