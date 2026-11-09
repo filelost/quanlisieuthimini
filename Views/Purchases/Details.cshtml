@@ -2,6 +2,19 @@
 @{
     ViewData["Title"] = "Chi tiết phiếu nhập";
     var receipt = Model.Receipt;
+    var canReceive = receipt.Status is "Draft" or "Partial";
+    var canClose = User.IsInRole(RoleNames.Admin);
+    var closedByLine = Model.ShortageActions.Where(action => action.Action == "Close")
+        .ToDictionary(action => action.PurchaseDetailId, action => action.Quantity);
+    var lines = receipt.Details.Select(line =>
+    {
+        var received = receipt.Status == "Received" ? line.Quantity : Model.Received.GetValueOrDefault(line.ProductId);
+        var closed = closedByLine.GetValueOrDefault(line.PurchaseDetailId);
+        return (Item: line, Received: received, Closed: closed, Remaining: line.Quantity - received - closed);
+    }).ToList();
+    var openLines = lines.Where(line => line.Remaining > 0 && canReceive).ToList();
+    var receivedValue = lines.Sum(line => decimal.Round(line.Received * line.Item.UnitCost, 2, MidpointRounding.AwayFromZero));
+    var unsettledValue = receipt.TotalAmount - receivedValue;
 }
 <div class="page-heading"><div><h1>Phiếu @receipt.ReceiptNo</h1><p>@receipt.Supplier.Name</p></div><a asp-action="Index">Quay lại</a></div>
 @if (TempData["PurchaseMessage"] is string message)
@@ -28,22 +41,34 @@
     </section>
 }
 <section class="panel table-responsive">
-    <table class="table align-middle">
-        <thead><tr><th>Sản phẩm</th><th>Đặt</th><th>Đã nhận</th><th>Còn thiếu</th><th>Đơn giá</th><th>Nhận hàng đạt</th></tr></thead>
-        <tbody>
-        @foreach (var line in receipt.Details)
+    <div class="d-flex flex-wrap gap-3 mb-3">
+        <span>Giá trị đặt <strong>@receipt.TotalAmount.ToString("N2") ₫</strong></span>
+        <span>Giá trị hàng thực nhận <strong>@receivedValue.ToString("N2") ₫</strong></span>
+        @if (unsettledValue > 0)
         {
-            var received = receipt.Status == "Received" ? line.Quantity : Model.Received.GetValueOrDefault(line.ProductId);
-            var remaining = line.Quantity - received;
+            <span>Chênh lệch để đối soát <strong>@unsettledValue.ToString("N2") ₫</strong></span>
+        }
+    </div>
+    <table class="table align-middle">
+        <thead><tr><th>Sản phẩm</th><th>Đặt</th><th>Thực nhận</th><th>Còn chờ</th><th>Đã chốt thiếu</th><th>Đơn giá</th><th>Nhận hàng đạt</th></tr></thead>
+        <tbody>
+        @foreach (var row in lines)
+        {
+            var line = row.Item;
             <tr>
-                <td>@line.Product.Name</td><td>@line.Quantity</td><td>@received</td><td>@remaining</td><td>@line.UnitCost.ToString("N2") ₫</td>
+                <td>@line.Product.Name <small>@line.Product.Unit</small></td>
+                <td>@line.Quantity.ToString("0.###")</td>
+                <td>@row.Received.ToString("0.###")</td>
+                <td>@row.Remaining.ToString("0.###")</td>
+                <td>@row.Closed.ToString("0.###")</td>
+                <td>@line.UnitCost.ToString("N2") ₫</td>
                 <td>
-                    @if (remaining > 0 && receipt.Status is "Draft" or "Partial")
+                    @if (row.Remaining > 0 && canReceive)
                     {
                         <form asp-action="Receive" asp-route-id="@receipt.PurchaseReceiptId" method="post" class="d-flex gap-2">
                             <input type="hidden" name="lineId" value="@line.PurchaseDetailId" />
-                            <input type="hidden" name="expectedReceived" value="@received" />
-                            <input name="quantity" class="form-control" type="number" min="0.001" max="@remaining.ToString(System.Globalization.CultureInfo.InvariantCulture)" step="0.001" required aria-label="Số lượng đạt" />
+                            <input type="hidden" name="expectedReceived" value="@row.Received" />
+                            <input name="quantity" class="form-control" type="number" min="0.001" max="@row.Remaining.ToString(System.Globalization.CultureInfo.InvariantCulture)" step="0.001" required aria-label="Số lượng đạt" />
                             <input name="reason" class="form-control" maxlength="300" placeholder="Lý do thiếu hoặc lỗi" aria-label="Lý do thiếu hoặc lỗi" />
                             <button class="btn btn-outline-primary text-nowrap">Xác nhận</button>
                         </form>
@@ -54,6 +79,68 @@
         </tbody>
     </table>
 </section>
+@if (openLines.Count > 0)
+{
+    <section class="panel p-3" aria-labelledby="shortage-title">
+        <h2 class="h5" id="shortage-title">Xử lý hàng giao thiếu</h2>
+        <p>Đếm lại hàng và đối chiếu phiếu giao. Ghi rõ số thiếu, số hỏng hoặc hàng giao sai. Nếu chưa rõ nguyên nhân, ghi “Chưa xác định” để nhà cung cấp kiểm tra.</p>
+        <p><strong>Liên hệ @receipt.Supplier.Name</strong>
+            @if (!string.IsNullOrWhiteSpace(receipt.Supplier.Phone)) { <span> · @receipt.Supplier.Phone</span> }
+            @if (!string.IsNullOrWhiteSpace(receipt.Supplier.Email)) { <span> · @receipt.Supplier.Email</span> }
+        </p>
+        <p>Ghi nhận chờ giao bù sau khi liên hệ nhà cung cấp. Khi hàng đến, nhập số thực nhận trên cùng phiếu.
+            @if (canClose) { <span>Chỉ chốt phần thiếu khi nhà cung cấp đã xác nhận hủy số còn thiếu hoặc đồng ý giảm tiền.</span> }
+        </p>
+        @foreach (var row in openLines)
+        {
+            var lineId = row.Item.PurchaseDetailId;
+            <form asp-action="ResolveShortage" asp-route-id="@receipt.PurchaseReceiptId" method="post" class="border-top pt-3 mt-3">
+                <input type="hidden" name="lineId" value="@lineId" />
+                <input type="hidden" name="expectedRemaining" value="@row.Remaining" />
+                <h3 class="h6">@row.Item.Product.Name · còn @row.Remaining.ToString("0.###") @row.Item.Product.Unit</h3>
+                <div class="row g-2 mb-2">
+                    <div class="col-md">
+                        <label for="shortage-reason-@lineId" class="form-label">Nội dung xử lý</label>
+                        <input id="shortage-reason-@lineId" name="reason" class="form-control" maxlength="300" required placeholder="VD: Đã báo giao thiếu, hẹn giao bù ngày mai" />
+                    </div>
+                    <div class="col-md">
+                        <label for="shortage-reference-@lineId" class="form-label">Xác nhận từ nhà cung cấp</label>
+                        <input id="shortage-reference-@lineId" name="supplierReference" class="form-control" maxlength="150" placeholder="Mã chứng từ hoặc thông tin xác nhận" />
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" name="resolution" value="FollowUp" class="btn btn-outline-primary">Ghi nhận chờ giao bù</button>
+                    @if (canClose)
+                    {
+                        <button type="submit" name="resolution" value="Close" class="btn btn-outline-danger">Chốt số lượng thiếu</button>
+                    }
+                </div>
+            </form>
+        }
+    </section>
+}
+@if (Model.ShortageActions.Count > 0)
+{
+    var productByLine = receipt.Details.ToDictionary(line => line.PurchaseDetailId, line => line.Product.Name);
+    <section class="panel p-3 table-responsive">
+        <h2 class="h5">Lịch sử xử lý hàng thiếu</h2>
+        <table class="table">
+            <thead><tr><th>Thời điểm (UTC+7)</th><th>Sản phẩm</th><th>Số lượng</th><th>Xử lý</th><th>Người ghi nhận</th><th>Nội dung</th><th>Xác nhận</th></tr></thead>
+            <tbody>
+            @foreach (var action in Model.ShortageActions)
+            {
+                <tr>
+                    <td><partial name="_VietnamDateTime" model="action.CreatedAt" /></td>
+                    <td>@productByLine[action.PurchaseDetailId]</td><td>@action.Quantity.ToString("0.###")</td>
+                    <td>@(action.Action == "Close" ? "Chốt thiếu" : "Chờ giao bù")</td>
+                    <td>@action.CreatedByUser.Username</td><td class="text-wrap">@action.Reason</td>
+                    <td class="text-wrap">@(action.SupplierReference ?? "—")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </section>
+}
 @if (Model.Deliveries.Count > 0)
 {
     <section class="panel p-3 mt-3 table-responsive">

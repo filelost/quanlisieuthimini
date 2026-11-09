@@ -36,7 +36,7 @@
             <tr>
                 <td><a asp-action="Details" asp-route-id="@receipt.PurchaseReceiptId">@receipt.ReceiptNo</a></td>
                 <td>@receipt.Supplier.Name</td>
-                <td>@(receipt.Status switch { "Draft" => "Nháp", "Partial" => "Đang nhận", "Received" => "Đã nhận đủ", _ => receipt.Status })</td>
+                <td>@(receipt.Status switch { "Draft" => "Nháp", "Partial" => "Còn hàng chờ nhận", "Received" => "Đã nhận đủ", "ClosedShort" => "Đã chốt thiếu", _ => receipt.Status })</td>
                 <td>@receipt.TotalAmount.ToString("N2") ₫</td>
             </tr>
         }

@@ -20,6 +20,8 @@ try {
     }
     sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/05_AddProductImages.sql
     if ($LASTEXITCODE) { throw 'Không cập nhật được bảng ảnh sản phẩm.' }
+    sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/06_AddPurchaseShortageActions.sql
+    if ($LASTEXITCODE) { throw 'Không cập nhật được bảng xử lý hàng nhập thiếu.' }
     sqlcmd -S $SqlInstance -E -C -b -d $Database -f 65001 -i CoSoDuLieu/03_DemoData.sql
     if ($LASTEXITCODE) { throw 'Không nạp được dữ liệu mẫu.' }
 

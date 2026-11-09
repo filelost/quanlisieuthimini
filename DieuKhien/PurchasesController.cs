@@ -51,9 +51,11 @@ namespace QuanLySieuThi.Controllers
                 .OrderByDescending(movement => movement.StockTransactionId).ToListAsync(cancellationToken);
             var received = deliveries.GroupBy(movement => movement.ProductId)
                 .ToDictionary(group => group.Key, group => group.Sum(movement => movement.QuantityChange));
+            var shortageActions = await ReceiptShortageActions(id).AsNoTracking().Include(action => action.CreatedByUser)
+                .OrderByDescending(action => action.PurchaseShortageActionId).ToListAsync(cancellationToken);
             var products = await db.Products.AsNoTracking().Where(product => product.IsActive)
                 .OrderBy(product => product.Name).ToListAsync(cancellationToken);
-            return View(new PurchasePageViewModel(receipt, products, received, deliveries));
+            return View(new PurchasePageViewModel(receipt, products, received, deliveries, shortageActions));
         }
 
         [HttpPost]
@@ -100,14 +102,17 @@ namespace QuanLySieuThi.Controllers
                 if (line is null || receipt.Status is not ("Draft" or "Partial"))
                     return "Dòng hàng hoặc trạng thái phiếu không hợp lệ.";
 
-                var received = await ReceiptMovements(id).GroupBy(movement => movement.ProductId)
-                    .ToDictionaryAsync(group => group.Key, group => group.Sum(movement => movement.QuantityChange), cancellationToken);
+                var received = await ReceivedQuantities(id, cancellationToken);
+                var closed = await ClosedQuantities(id, cancellationToken);
                 var previous = received.GetValueOrDefault(line.ProductId);
                 if (previous != expectedReceived)
                     return "Phiếu đã thay đổi. Kiểm tra lại số lượng thực nhận.";
-                if (quantity > line.Quantity - previous)
+                var remaining = line.Quantity - previous - closed.GetValueOrDefault(lineId);
+                if (remaining <= 0)
+                    return "Dòng hàng đã nhận đủ hoặc đã chốt phần thiếu.";
+                if (quantity > remaining)
                     return "Số lượng thực nhận vượt số lượng còn thiếu.";
-                if (quantity < line.Quantity - previous && string.IsNullOrEmpty(reason))
+                if (quantity < remaining && string.IsNullOrEmpty(reason))
                     return "Ghi rõ lý do hàng thiếu hoặc hàng lỗi khi nhận một phần.";
 
                 var stock = await db.Inventory.FindAsync([line.ProductId], cancellationToken);
@@ -123,9 +128,61 @@ namespace QuanLySieuThi.Controllers
                     "Purchase", "PurchaseReceipt", id, reason, UserId()));
                 received[line.ProductId] = previous + quantity;
                 receipt.ReceivedAt = DateTime.UtcNow;
-                receipt.Status = receipt.Details.All(item => received.GetValueOrDefault(item.ProductId) >= item.Quantity)
-                    ? "Received" : "Partial";
-                return "Đã ghi nhận số lượng thực nhận và cập nhật tồn kho.";
+                SetReceiptStatus(receipt, received, closed);
+                return quantity < remaining
+                    ? $"Đã cập nhật tồn kho theo số lượng thực nhận. Còn thiếu {remaining - quantity:0.###} {line.Product.Unit}. Chọn cách xử lý phần thiếu trên phiếu."
+                    : "Đã ghi nhận số lượng thực nhận và cập nhật tồn kho.";
+            }, cancellationToken);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResolveShortage(int id, int lineId, decimal expectedRemaining,
+            string? resolution, string? reason, string? supplierReference, CancellationToken cancellationToken)
+        {
+            if (resolution == "Close" && !User.IsInRole(RoleNames.Admin))
+                return Forbid();
+
+            reason = reason?.Trim();
+            supplierReference = supplierReference?.Trim();
+            if (!ModelState.IsValid || !ValidQuantity(expectedRemaining)
+                || resolution is not ("FollowUp" or "Close") || string.IsNullOrEmpty(reason) || reason.Length > 300
+                || supplierReference?.Length > 150 || (resolution == "Close" && string.IsNullOrEmpty(supplierReference)))
+                return Back(id, "Nhập nội dung xử lý. Khi chốt thiếu, cần có mã hoặc thông tin xác nhận của nhà cung cấp.");
+
+            return await UpdateReceipt(id, async receipt =>
+            {
+                var line = receipt.Details.SingleOrDefault(item => item.PurchaseDetailId == lineId);
+                if (line is null || receipt.Status is not ("Draft" or "Partial"))
+                    return "Dòng hàng hoặc trạng thái phiếu không hợp lệ.";
+
+                var received = await ReceivedQuantities(id, cancellationToken);
+                var closed = await ClosedQuantities(id, cancellationToken);
+                var remaining = line.Quantity - received.GetValueOrDefault(line.ProductId) - closed.GetValueOrDefault(lineId);
+                if (remaining <= 0 || remaining != expectedRemaining)
+                    return "Số lượng còn thiếu đã thay đổi. Kiểm tra lại phiếu trước khi xử lý.";
+
+                var previous = await ReceiptShortageActions(id).Where(action => action.PurchaseDetailId == lineId)
+                    .OrderByDescending(action => action.PurchaseShortageActionId).FirstOrDefaultAsync(cancellationToken);
+                if (previous is not null && previous.Action == resolution && previous.Quantity == remaining
+                    && previous.Reason == reason && previous.SupplierReference == supplierReference)
+                    return "Nội dung xử lý này đã được ghi nhận.";
+
+                db.PurchaseShortageActions.Add(new PurchaseShortageAction
+                {
+                    PurchaseDetailId = lineId,
+                    Action = resolution,
+                    Quantity = remaining,
+                    Reason = reason,
+                    SupplierReference = supplierReference,
+                    CreatedByUserId = UserId()
+                });
+                if (resolution == "Close")
+                    closed[lineId] = remaining;
+                SetReceiptStatus(receipt, received, closed);
+
+                return resolution == "Close"
+                    ? "Đã chốt phần thiếu theo xác nhận của nhà cung cấp. Chỉ hàng thực nhận được tính vào tồn kho."
+                    : "Đã ghi vào phiếu việc chờ nhà cung cấp giao bù. Ghi nhận hàng khi đợt giao bù đến.";
             }, cancellationToken);
         }
 
@@ -158,6 +215,25 @@ namespace QuanLySieuThi.Controllers
         private IQueryable<StockTransaction> ReceiptMovements(int id) => db.StockTransactions
             .Where(movement => movement.ReferenceType == "PurchaseReceipt" && movement.ReferenceId == id
                 && movement.Type == "Purchase");
+
+        private IQueryable<PurchaseShortageAction> ReceiptShortageActions(int id) =>
+            db.PurchaseShortageActions.Where(action => action.PurchaseDetail.PurchaseReceiptId == id);
+
+        private Task<Dictionary<int, decimal>> ReceivedQuantities(int id, CancellationToken cancellationToken) =>
+            ReceiptMovements(id).GroupBy(movement => movement.ProductId)
+                .ToDictionaryAsync(group => group.Key, group => group.Sum(movement => movement.QuantityChange), cancellationToken);
+
+        private Task<Dictionary<int, decimal>> ClosedQuantities(int id, CancellationToken cancellationToken) =>
+            ReceiptShortageActions(id).Where(action => action.Action == "Close")
+                .ToDictionaryAsync(action => action.PurchaseDetailId, action => action.Quantity, cancellationToken);
+
+        private static void SetReceiptStatus(PurchaseReceipt receipt, Dictionary<int, decimal> received,
+            Dictionary<int, decimal> closed)
+        {
+            var complete = receipt.Details.All(line => received.GetValueOrDefault(line.ProductId)
+                + closed.GetValueOrDefault(line.PurchaseDetailId) >= line.Quantity);
+            receipt.Status = !complete ? "Partial" : closed.Count > 0 ? "ClosedShort" : "Received";
+        }
 
         private IActionResult Back(int id, string message)
         {

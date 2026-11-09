@@ -8,6 +8,8 @@
 
 Chạy `05_AddProductImages.sql` trên cơ sở dữ liệu đã tạo trước khi có tính năng ảnh sản phẩm. Script demo tự thực hiện bước này.
 
+Chạy `06_AddPurchaseShortageActions.sql` để bổ sung lịch sử xử lý hàng nhập thiếu cho cơ sở dữ liệu đang sử dụng. Script demo tự thực hiện bước này.
+
 PowerShell:
 
 ```powershell

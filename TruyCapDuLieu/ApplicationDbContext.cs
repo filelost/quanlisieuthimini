@@ -14,6 +14,7 @@ namespace QuanLySieuThi.Data
         public DbSet<Supplier> Suppliers => Set<Supplier>();
         public DbSet<PurchaseReceipt> PurchaseReceipts => Set<PurchaseReceipt>();
         public DbSet<PurchaseDetail> PurchaseDetails => Set<PurchaseDetail>();
+        public DbSet<PurchaseShortageAction> PurchaseShortageActions => Set<PurchaseShortageAction>();
         public DbSet<Inventory> Inventory => Set<Inventory>();
         public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
         public DbSet<Customer> Customers => Set<Customer>();
@@ -107,6 +108,17 @@ namespace QuanLySieuThi.Data
                 e.Property(x => x.UnitCost).HasPrecision(18, 2); e.Property(x => x.LineTotal).HasPrecision(18, 2);
                 e.HasOne(x => x.PurchaseReceipt).WithMany(x => x.Details).HasForeignKey(x => x.PurchaseReceiptId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(x => x.Product).WithMany(x => x.PurchaseDetails).HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<PurchaseShortageAction>(e =>
+            {
+                e.ToTable("PurchaseShortageActions");
+                e.HasKey(x => x.PurchaseShortageActionId);
+                e.Property(x => x.Action).HasMaxLength(20).IsRequired();
+                e.Property(x => x.Quantity).HasPrecision(18, 3);
+                e.Property(x => x.Reason).HasMaxLength(300).IsRequired();
+                e.Property(x => x.SupplierReference).HasMaxLength(150);
+                e.HasOne(x => x.PurchaseDetail).WithMany().HasForeignKey(x => x.PurchaseDetailId);
+                e.HasOne(x => x.CreatedByUser).WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Inventory>(e =>
             {
