@@ -12,6 +12,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.22" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
     <Compile Remove="DieuKhien/WeatherForecastController.cs;WeatherForecast.cs" />
+    <Compile Remove="quanlisieuthimini-codex-nhom-phat-trien/**/*.cs" />
+    <Content Remove="quanlisieuthimini-codex-nhom-phat-trien/**/*" />
+    <None Remove="quanlisieuthimini-codex-nhom-phat-trien/**/*" />
   </ItemGroup>
 
 </Project>
