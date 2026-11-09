@@ -22,7 +22,7 @@ Môi trường Windows, .NET SDK 10.0.403 và SQL Server Express. Schema và d�
 | TC16 | FR03–04 | Nhận 3 còn lại → tồn tăng 3 | Pass |
 | TC17 | FR06 | MoMo sandbox, callback, đối soát, hủy và hoàn tồn | Chưa chạy |
 | TC18 | FR02–04 | CRUD đầy đủ, điều chỉnh kho, StockStaff trên trình duyệt | Chưa chạy |
-| TC19 | NFR02 | Build, PR và CI thực tế trên Bitbucket | Chưa chạy trên Bitbucket |
+| TC19 | NFR02 | Build Release, pull request và CI trên GitHub | Chưa xác minh trên GitHub |
 | TC20 | NFR01–02 | Hai yêu cầu đồng thời, HTTPS triển khai và tải | Chưa chạy |
 | TC21 | NFR01 | JSON checkout thiếu CSRF token → 400 | Pass |
 | TC22 | FR05–06 | JSON checkout tiền mặt, replay cùng hóa đơn và chỉ trừ tồn một lần | Pass |

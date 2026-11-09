@@ -57,12 +57,12 @@ Sản phẩm và tồn kho trả tối đa 100 dòng. API trả 401 khi thiếu 
 - [Postman Collection](KiemThu/MiniSupermarket.postman_collection.json)
 - Chạy `pwsh ./KiemThu/Smoke.ps1 -BaseUrl http://localhost:5233` với DB QA đã seed và thông tin Admin QA trong biến môi trường. Script tạo giao dịch thật trên DB đã cấu hình.
 
-## Cấu trúc Git và Bitbucket
+## Cấu trúc dự án và quy trình GitHub
 
 - DieuKhien, DuLieuTraoDoi, MoHinh, DichVu và TruyCapDuLieu chứa nghiệp vụ và truy cập dữ liệu.
 - Views và wwwroot chứa giao diện, Bootstrap và JavaScript.
 - CoSoDuLieu, TaiLieu và KiemThu chứa SQL, tài liệu và kịch bản kiểm thử.
-- Dùng nhánh ngắn theo công việc, ví dụ `feature/fr05-checkout`. PR vào nhánh chính cần Team Lead duyệt và đính kèm mã yêu cầu, mã ca và kết quả chạy. Pipeline build Release tại `bitbucket-pipelines.yml`. [Tham chiếu Bitbucket Pipelines](https://support.atlassian.com/bitbucket-cloud/docs/bitbucket-pipelines-configuration-reference/)
+- Tạo nhánh theo công việc từ `codex/nhom-phat-trien`, ví dụ `feature/fr05-checkout`. Mở pull request về nhánh nhóm để Team Lead duyệt và đính kèm mã yêu cầu, mã ca kiểm thử và kết quả chạy.
 
 ## Chạy bản demo bằng một lệnh
 
