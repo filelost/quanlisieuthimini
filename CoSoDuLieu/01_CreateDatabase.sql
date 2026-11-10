@@ -191,11 +191,15 @@ CREATE TABLE dbo.SalesInvoices (
     Subtotal decimal(18,2) NOT NULL,
     DiscountAmount decimal(18,2) NOT NULL CONSTRAINT DF_SalesInvoices_DiscountAmount DEFAULT (0),
     TotalAmount decimal(18,2) NOT NULL,
+    CashReceived decimal(18,2) NOT NULL CONSTRAINT DF_SalesInvoices_CashReceived DEFAULT (0),
+    ChangeAmount decimal(18,2) NOT NULL CONSTRAINT DF_SalesInvoices_ChangeAmount DEFAULT (0),
     PaymentMethod nvarchar(30) NOT NULL,
     Note nvarchar(500) NULL,
     CONSTRAINT CK_SalesInvoices_Subtotal CHECK (Subtotal >= 0),
     CONSTRAINT CK_SalesInvoices_DiscountAmount CHECK (DiscountAmount >= 0),
     CONSTRAINT CK_SalesInvoices_TotalAmount CHECK (TotalAmount >= 0),
+    CONSTRAINT CK_SalesInvoices_CashReceived CHECK (CashReceived >= 0),
+    CONSTRAINT CK_SalesInvoices_ChangeAmount CHECK (ChangeAmount >= 0),
     CONSTRAINT FK_SalesInvoices_Customers FOREIGN KEY (CustomerId) REFERENCES dbo.Customers(CustomerId),
     CONSTRAINT FK_SalesInvoices_Users FOREIGN KEY (CashierUserId) REFERENCES dbo.Users(UserId)
 );

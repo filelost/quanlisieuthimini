@@ -1,5 +1,6 @@
 # Hệ thống quản lý siêu thị mini
 
+ASP.NET Core 9, EF Core, SQL Server, Razor HTML, CSS, JavaScript và Bootstrap. Giao diện dùng cookie đăng nhập cùng origin với API. Giao diện Razor gửi biểu mẫu MVC có CSRF token. Web API cung cấp tra cứu sản phẩm, tồn kho, báo cáo và ghi giao dịch bán hàng JSON dùng chung nghiệp vụ với POS.
 ASP.NET Core 10, EF Core, SQL Server, Razor HTML, CSS, JavaScript và Bootstrap. Giao diện dùng cookie đăng nhập cùng origin với API. Giao diện Razor gửi biểu mẫu MVC có CSRF token. Web API cung cấp tra cứu sản phẩm, tồn kho, báo cáo và ghi giao dịch bán hàng JSON dùng chung nghiệp vụ với POS.
 
 ## Chạy local trên Windows
@@ -62,6 +63,25 @@ Sản phẩm và tồn kho trả tối đa 100 dòng. API trả 401 khi thiếu 
 - DieuKhien, DuLieuTraoDoi, MoHinh, DichVu và TruyCapDuLieu chứa nghiệp vụ và truy cập dữ liệu.
 - Views và wwwroot chứa giao diện, Bootstrap và JavaScript.
 - CoSoDuLieu, TaiLieu và KiemThu chứa SQL, tài liệu và kịch bản kiểm thử.
+- Tạo nhánh theo công việc từ `codex/nhom-phat-trien`, ví dụ `feature/fr05-checkout`. Mở pull request về nhánh nhóm để Team Lead duyệt và đính kèm mã yêu cầu, mã ca kiểm thử và kết quả chạy.
+
+## Chạy bản demo bằng một lệnh
+
+Trên Windows, từ thư mục gốc chạy `pwsh -File LenhChay/Start-Demo.ps1`. Script dùng SQL Server Express và DB riêng `QuanLySieuThi_Demo_Local`, nạp dữ liệu mẫu và mở ứng dụng ở http://localhost:5233/Auth/Login. Nhập mật khẩu Admin khi được hỏi. Khi khởi động lại, dùng mật khẩu đã tạo lần đầu. Nếu SDK hoặc SQL Server nằm ở vị trí khác, truyền `-Dotnet` hoặc `-SqlInstance` cho script.
+
+## Đổi mật khẩu
+
+Sau khi đăng nhập, chọn **Đổi mật khẩu** ở thanh trên cùng. Nhập mật khẩu hiện tại, mật khẩu mới ít nhất 8 ký tự và xác nhận. Sau khi lưu, đăng nhập lại bằng mật khẩu mới.
+
+
+## Nâng cấp POS, thanh toán tiền mặt và in hóa đơn
+
+- Quầy bán hàng có tính tạm tính, khuyến mãi, tổng thanh toán và tiền thừa trực tiếp trên trình duyệt.
+- Thu ngân nhập số tiền khách đưa; máy chủ kiểm tra lại tổng tiền và số tiền nhận trước khi ghi hóa đơn.
+- Hóa đơn lưu `CashReceived` và `ChangeAmount`; API checkout cũ không truyền `CashReceived` vẫn được chấp nhận và mặc định khách đưa đúng số tiền phải trả.
+- Hóa đơn đã thanh toán có nút **In hóa đơn** ở trang chi tiết và danh sách hóa đơn. Bản in tối ưu khổ giấy nhiệt 80 mm, có thể chọn máy in hoặc lưu PDF trong hộp thoại trình duyệt.
+- Cơ sở dữ liệu mới nhận hai cột thanh toán từ `01_CreateDatabase.sql`. Với cơ sở dữ liệu cũ, chạy `CoSoDuLieu/08_AddCashPaymentAndReceipt.sql` trước khi chạy phiên bản mới. Script demo tự chạy bước này. Hóa đơn cũ được gán mặc định tiền khách đưa bằng tổng phải trả và tiền thừa bằng 0 vì hệ thống cũ không lưu số tiền thực nhận.
+- MoMo vẫn giữ luồng IPN/đối soát hiện có; chỉ in hóa đơn chính thức khi trạng thái là `Completed`.
 - Tạo nhánh theo công việc từ `codex/nhom-phat-trien`, ví dụ `feature/fr05-checkout`. Mở pull request về nhánh nhóm để Team Lead duyệt và đính kèm mã yêu cầu, mã ca kiểm thử và kết quả chạy.
 
 ## Chạy bản demo bằng một lệnh

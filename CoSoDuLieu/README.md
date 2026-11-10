@@ -41,3 +41,6 @@ $env:Promotions__GIAM10__Value = "10"
 $env:Promotions__GIAM5000__Type = "Fixed"
 $env:Promotions__GIAM5000__Value = "5000"
 ```
+
+Chạy `08_AddCashPaymentAndReceipt.sql` trên cơ sở dữ liệu đang sử dụng để lưu số tiền khách đưa và tiền thừa trên hóa đơn. Script có thể chạy lặp lại an toàn. Cơ sở dữ liệu mới đã có sẵn hai cột này trong `01_CreateDatabase.sql`.
+```

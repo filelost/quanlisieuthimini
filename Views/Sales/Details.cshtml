@@ -21,6 +21,13 @@
         <dd class="col-sm-8">@(Model.CashierUser.Employee?.FullName ?? Model.CashierUser.Username)</dd>
         <dt class="col-sm-4">Phương thức thanh toán</dt>
         <dd class="col-sm-8">@paymentMethod</dd>
+        @if (Model.PaymentMethod == "Cash")
+        {
+            <dt class="col-sm-4">Tiền khách đưa</dt>
+            <dd class="col-sm-8">@Model.CashReceived.ToString("N0") ₫</dd>
+            <dt class="col-sm-4">Tiền thừa</dt>
+            <dd class="col-sm-8">@Model.ChangeAmount.ToString("N0") ₫</dd>
+        }
         <dt class="col-sm-4">Trạng thái</dt>
         <dd class="col-sm-8"><partial name="_InvoiceStatus" model="Model.Status" /></dd>
     </dl>
@@ -62,6 +69,10 @@
     {
         <p><strong>Ghi chú</strong> @Model.Note</p>
     }
+    @if (Model.Status == "Completed")
+    {
+        <a class="btn btn-primary" asp-action="Print" asp-route-id="@Model.SalesInvoiceId" target="_blank" rel="noopener">In hóa đơn</a>
+    }
     @if (Model.Status is "AwaitingMoMo" or "Pending")
     {
         <div class="d-flex gap-2">
@@ -83,4 +94,5 @@
             <button class="btn btn-outline-danger text-nowrap">Xác nhận hủy và hoàn tồn</button>
         </form>
     }
+</section>
 </section>
