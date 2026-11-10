@@ -1,0 +1,20 @@
+@{ ViewData["Title"] = "Báo cáo"; }
+<h1>Báo cáo bán hàng</h1>
+<p>Doanh thu tính từ hóa đơn đã hoàn tất. Khoảng ngày dùng UTC.</p>
+<form id="sales-report" class="row g-3 mb-4">
+    <label class="col-auto">Từ ngày <input name="from" type="date" class="form-control"></label>
+    <label class="col-auto">Đến ngày <input name="to" type="date" class="form-control"></label>
+    <div class="col-auto align-self-end d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Xem báo cáo</button>
+        <button type="button" id="export-excel" class="btn btn-outline-success">Xuất Excel</button>
+    </div>
+</form>
+<p class="text-muted">Tải workbook Excel gồm doanh thu, hóa đơn, tồn kho và 500 mặt hàng bán chạy nhất trong kỳ.</p>
+<p id="report-status" role="status"></p>
+<div class="table-responsive">
+    <table class="table">
+        <thead><tr><th>Ngày UTC</th><th>Hóa đơn</th><th>Doanh thu</th></tr></thead>
+        <tbody id="report-days"></tbody>
+    </table>
+</div>
+<script src="~/js/sales-report.js" asp-append-version="true" defer></script>

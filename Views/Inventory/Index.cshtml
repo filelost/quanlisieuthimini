@@ -1,0 +1,52 @@
+@model IReadOnlyList<QuanLySieuThi.Models.Entities.Product>
+@{ ViewData["Title"] = "Tồn kho"; }
+<div class="page-heading">
+    <div><h1>Tồn kho</h1><p class="text-muted">Tra số lượng hiện có, hàng tồn thấp và lịch sử biến động.</p></div>
+    <a asp-controller="Purchases" asp-action="Index" class="btn btn-outline-primary">Phiếu nhập hàng</a>
+</div>
+@if (TempData["StockMessage"] is string message)
+{
+    <div class="alert alert-info">@message</div>
+}
+<section class="panel p-3">
+    <form asp-action="Index" method="get" class="toolbar">
+        <input class="form-control" name="search" value="@ViewData["Search"]" placeholder="Tên hoặc mã sản phẩm" aria-label="Tìm sản phẩm" />
+        <label><input type="checkbox" name="lowStock" value="true" checked="@((bool)ViewData["LowStock"]!)" /> Chỉ hiện tồn thấp</label>
+        <button class="btn btn-outline-secondary">Lọc</button>
+    </form>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Sản phẩm</th><th>Tồn thực tế</th><th>Ngưỡng cảnh báo</th><th>Lịch sử</th>@if (User.IsInRole(RoleNames.Admin)) { <th>Điều chỉnh</th> }</tr></thead>
+            <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr><td colspan="@(User.IsInRole(RoleNames.Admin) ? 5 : 4)" class="text-center text-muted">Không có sản phẩm phù hợp.</td></tr>
+            }
+            @foreach (var product in Model)
+            {
+                var quantity = product.Inventory?.QuantityOnHand ?? 0;
+                <tr>
+                    <td>@product.Name <small>@product.Sku</small></td>
+                    <td>@quantity.ToString("0.###") @product.Unit @if (quantity <= product.ReorderLevel) { <span class="badge text-bg-warning">Tồn thấp</span> }</td>
+                    <td>@product.ReorderLevel.ToString("0.###")</td>
+                    <td><a asp-action="History" asp-route-id="@product.ProductId" aria-label="Xem lịch sử @product.Name">Xem lịch sử</a></td>
+                    @if (User.IsInRole(RoleNames.Admin))
+                    {
+                        <td>
+                        @if (product.Inventory is not null)
+                        {
+                            <form asp-action="Adjust" asp-route-id="@product.ProductId" method="post" class="d-flex gap-2">
+                                <input type="hidden" name="version" value="@Convert.ToBase64String(product.Inventory.RowVersion)" />
+                                <input class="form-control" name="quantity" type="number" min="0" step="0.001" required aria-label="Số tồn sau điều chỉnh" />
+                                <input class="form-control" name="reason" maxlength="300" required placeholder="Lý do" aria-label="Lý do điều chỉnh" />
+                                <button class="btn btn-outline-primary">Lưu</button>
+                            </form>
+                        }
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

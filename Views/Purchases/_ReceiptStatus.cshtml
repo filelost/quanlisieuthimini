@@ -1,0 +1,9 @@
+@model string
+@(Model switch
+{
+    "Draft" => "Nháp",
+    "Partial" => "Còn hàng chờ nhận",
+    "Received" => "Đã nhận đủ",
+    "ClosedShort" => "Đã chốt thiếu",
+    _ => Model
+})
