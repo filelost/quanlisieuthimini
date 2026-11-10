@@ -1,0 +1,6 @@
+@model DateTime
+@{
+    var utc = new DateTimeOffset(DateTime.SpecifyKind(Model, DateTimeKind.Utc));
+    var vietnamTime = utc.ToOffset(TimeSpan.FromHours(7));
+}
+<time datetime="@vietnamTime.ToString("O", System.Globalization.CultureInfo.InvariantCulture)">@vietnamTime.ToString("dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)</time>
