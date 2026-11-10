@@ -1,4 +1,4 @@
-IF OBJECT_ID(N'dbo.ProductImages', N'U') IS NULL
+    IF OBJECT_ID(N'dbo.ProductImages', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.ProductImages (
         ProductId int NOT NULL CONSTRAINT PK_ProductImages PRIMARY KEY,

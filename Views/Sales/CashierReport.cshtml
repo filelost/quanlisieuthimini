@@ -1,0 +1,111 @@
+@model CashierReportViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Doanh thu của tôi";
+    var shiftFrom = (DateTime)ViewData["ShiftFrom"]!;
+    var shiftTo = (DateTime)ViewData["ShiftTo"]!;
+    var dateValue = Model.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    var shiftFromValue = shiftFrom.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+    var shiftToValue = shiftTo.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+    var methods = Model.Payments.ToDictionary(payment => payment.Method);
+    var paymentRows = new[] { "Cash", "MoMo" }.Concat(methods.Keys).Distinct();
+    string PaymentLabel(string method) => method == "Cash" ? "Tiền mặt" : method;
+}
+<div class="page-heading">
+    <div>
+        <h1>Doanh thu của tôi</h1>
+        <p>Tài khoản <strong>@User.Identity?.Name</strong> · Theo giờ lập hóa đơn (UTC+7)</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Về quầy thu ngân</a>
+</div>
+
+@if (TempData["CashierReportMessage"] is string message)
+{
+    <div class="alert alert-warning" role="alert">@message</div>
+}
+
+<section class="panel">
+    <h2 class="h5">Xem theo ngày, tháng hoặc năm</h2>
+    <form asp-action="CashierReport" method="get" class="row g-3 align-items-end">
+        <div class="col-sm-auto">
+            <label for="cashier-period" class="form-label">Kỳ báo cáo</label>
+            <select id="cashier-period" name="period" class="form-select">
+                <option value="day" selected="@(Model.Period is "day" or "shift")">Ngày</option>
+                <option value="month" selected="@(Model.Period == "month")">Tháng</option>
+                <option value="year" selected="@(Model.Period == "year")">Năm</option>
+            </select>
+        </div>
+        <div class="col-sm-auto">
+            <label for="cashier-date" class="form-label">Chọn một ngày trong kỳ</label>
+            <input id="cashier-date" name="date" type="date" value="@dateValue" required class="form-control" />
+        </div>
+        <div class="col-sm-auto"><button type="submit" class="btn btn-primary">Xem doanh thu</button></div>
+    </form>
+</section>
+
+<section class="panel">
+    <h2 class="h5">Đối chiếu bàn giao ca</h2>
+    <p>Chọn giờ bắt đầu và giờ bàn giao. Bạn có thể chọn ca qua nửa đêm, tối đa 24 giờ.</p>
+    <form asp-action="CashierReport" method="get" class="row g-3 align-items-end">
+        <input type="hidden" name="period" value="shift" />
+        <div class="col-sm-auto">
+            <label for="cashier-shift-from" class="form-label">Bắt đầu ca (UTC+7)</label>
+            <input id="cashier-shift-from" name="from" type="datetime-local" step="1" value="@shiftFromValue" required class="form-control" />
+        </div>
+        <div class="col-sm-auto">
+            <label for="cashier-shift-to" class="form-label">Giờ bàn giao (UTC+7)</label>
+            <input id="cashier-shift-to" name="to" type="datetime-local" step="1" value="@shiftToValue" required class="form-control" />
+        </div>
+        <div class="col-sm-auto"><button type="submit" class="btn btn-outline-primary">Xem số liệu ca</button></div>
+    </form>
+</section>
+
+<section class="panel" aria-labelledby="cashier-totals">
+    <h2 class="h5" id="cashier-totals">@(Model.Period == "shift" ? "Tổng kết ca" : "Tổng doanh thu trong kỳ")</h2>
+    <p>Từ @Model.Start.ToString("dd/MM/yyyy HH:mm:ss") đến trước @Model.End.ToString("dd/MM/yyyy HH:mm:ss") (UTC+7).</p>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th scope="col">Phương thức</th><th scope="col">Hóa đơn hoàn tất</th><th scope="col">Doanh thu</th></tr></thead>
+            <tbody>
+            @foreach (var method in paymentRows)
+            {
+                var total = methods.GetValueOrDefault(method);
+                <tr><th scope="row">@PaymentLabel(method)</th><td>@(total?.InvoiceCount ?? 0)</td><td>@((total?.Amount ?? 0).ToString("N2")) ₫</td></tr>
+            }
+            </tbody>
+            <tfoot><tr><th scope="row">Tổng cộng</th><td>@Model.Payments.Sum(payment => payment.InvoiceCount)</td><td><strong>@Model.Payments.Sum(payment => payment.Amount).ToString("N2") ₫</strong></td></tr></tfoot>
+        </table>
+    </div>
+    @if (Model.PendingCount > 0)
+    {
+        <p class="alert alert-warning mt-3 mb-0">Có <strong>@Model.PendingCount</strong> hóa đơn chờ thanh toán, trị giá <strong>@Model.PendingAmount.ToString("N2") ₫</strong>. Kiểm tra các hóa đơn này trước khi bàn giao.</p>
+    }
+</section>
+
+@if (Model.Period == "shift")
+{
+    <section class="panel" aria-labelledby="cashier-shift-invoices">
+        <h2 class="h5" id="cashier-shift-invoices">Hóa đơn trong ca</h2>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th scope="col">Mã hóa đơn</th><th scope="col">Giờ lập (UTC+7)</th><th scope="col">Thanh toán</th><th scope="col">Trạng thái</th><th scope="col">Tổng tiền</th></tr></thead>
+                <tbody>
+                @if (Model.Invoices.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-center text-muted">Không có hóa đơn trong khoảng giờ này.</td></tr>
+                }
+                @foreach (var invoice in Model.Invoices)
+                {
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@invoice.Id">@invoice.Number</a></td>
+                        <td><partial name="_VietnamDateTime" model="invoice.CreatedAt" /></td>
+                        <td>@PaymentLabel(invoice.PaymentMethod)</td>
+                        <td><partial name="_InvoiceStatus" model="invoice.Status" /></td>
+                        <td>@invoice.Amount.ToString("N2") ₫</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}

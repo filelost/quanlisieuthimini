@@ -12,6 +12,8 @@ Chạy `06_AddPurchaseShortageActions.sql` để bổ sung lịch sử xử lý 
 
 Chạy `07_AddWarehouseAudit.sql` để bổ sung thời điểm lập phiếu, người thêm dòng hàng và mã chứng từ giao hàng cho cơ sở dữ liệu đang sử dụng. Script demo tự thực hiện bước này. Các phiếu cũ thiếu thông tin sẽ hiển thị “Chưa ghi nhận”.
 
+Chạy `08_AddAuditLogs.sql` và `09_AddCashPayment.sql` để nâng cấp cơ sở dữ liệu hiện có cho nhật ký thao tác và tiền khách đưa. Script demo tự thực hiện các bước này. Hóa đơn cũ giữ thông tin tiền khách đưa ở trạng thái chưa ghi nhận.
+
 PowerShell:
 
 ```powershell
@@ -40,7 +42,4 @@ $env:Promotions__GIAM10__Type = "Percent"
 $env:Promotions__GIAM10__Value = "10"
 $env:Promotions__GIAM5000__Type = "Fixed"
 $env:Promotions__GIAM5000__Value = "5000"
-```
-
-Chạy `08_AddCashPaymentAndReceipt.sql` trên cơ sở dữ liệu đang sử dụng để lưu số tiền khách đưa và tiền thừa trên hóa đơn. Script có thể chạy lặp lại an toàn. Cơ sở dữ liệu mới đã có sẵn hai cột này trong `01_CreateDatabase.sql`.
 ```

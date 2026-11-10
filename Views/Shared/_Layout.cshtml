@@ -36,6 +36,7 @@
                     <a asp-controller="Sales" asp-action="Index"><span>▣</span>Bán hàng</a>
                     <a asp-controller="Screens" asp-action="Customers"><span>♙</span>Khách hàng</a>
                     <a asp-controller="Sales" asp-action="Invoices"><span>▧</span>@(isManager ? "Hóa đơn" : "Hóa đơn của tôi")</a>
+                    <a asp-controller="Sales" asp-action="CashierReport"><span>▥</span>Doanh thu của tôi</a>
                 }
                 @if (isManager || isStockStaff)
                 {
@@ -48,6 +49,7 @@
                     <div class="sidebar-label nav-section-label">QUẢN TRỊ</div>
                     <a asp-controller="Admin" asp-action="Employees"><span>♧</span>Nhân viên & tài khoản</a>
                     <a asp-controller="Screens" asp-action="Reports"><span>▥</span>Báo cáo</a>
+                    <a asp-controller="AuditLogs" asp-action="Index"><span>◷</span>Nhật ký thao tác</a>
                 }
                 @if (User.IsInRole(RoleNames.Customer))
                 {

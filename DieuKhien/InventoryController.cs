@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLySieuThi.Data;
 using QuanLySieuThi.Models;
+using QuanLySieuThi.Models.Entities;
 using QuanLySieuThi.Service;
 
 namespace QuanLySieuThi.Controllers
@@ -76,8 +77,20 @@ namespace QuanLySieuThi.Controllers
             if (stock.QuantityOnHand == quantity)
                 return RedirectToAction(nameof(Index));
 
-            db.StockTransactions.Add(StockMovement.Apply(stock, quantity, "Adjustment", "Inventory", id,
-                reason, int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)));
+            var movement = StockMovement.Apply(stock, quantity, "Adjustment", "Inventory", id,
+                reason, int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+            db.StockTransactions.Add(movement);
+            db.AuditLogs.Add(new AuditLog
+            {
+                ActorUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+                ActorUsername = User.Identity?.Name ?? "Không rõ",
+                ActionType = "Inventory.Adjusted",
+                TargetType = "Tồn kho",
+                TargetId = id.ToString(),
+                TargetName = $"{stock.Product.Sku} · {stock.Product.Name}",
+                Details = $"Số lượng {movement.QuantityBefore:0.###} → {movement.QuantityAfter:0.###}. Lý do: {reason}",
+                CreatedAt = movement.CreatedAt
+            });
             try
             {
                 await db.SaveChangesAsync(cancellationToken);

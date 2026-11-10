@@ -1,16 +1,83 @@
 @{ ViewData["Title"] = "Báo cáo"; }
-<h1>Báo cáo bán hàng</h1>
-<p>Doanh thu tính từ hóa đơn đã hoàn tất. Khoảng ngày dùng UTC.</p>
-<form id="sales-report" class="row g-3 mb-4">
-    <label class="col-auto">Từ ngày <input name="from" type="date" class="form-control"></label>
-    <label class="col-auto">Đến ngày <input name="to" type="date" class="form-control"></label>
-    <div class="col-auto align-self-end"><button class="btn btn-primary">Xem báo cáo</button></div>
-</form>
-<p id="report-status" role="status"></p>
-<div class="table-responsive">
-    <table class="table">
-        <thead><tr><th>Ngày UTC</th><th>Hóa đơn</th><th>Doanh thu</th></tr></thead>
-        <tbody id="report-days"></tbody>
-    </table>
+<div class="page-heading">
+    <div>
+        <h1>Báo cáo bán hàng</h1>
+        <p>Doanh thu và số hóa đơn đã hoàn tất. Các kỳ báo cáo tính theo UTC.</p>
+    </div>
 </div>
+<section class="panel">
+    <form id="sales-report" class="mb-3">
+        <fieldset class="row g-3 align-items-end">
+            <div class="col-sm-auto">
+                <label for="report-period" class="form-label">Kỳ báo cáo</label>
+                <select name="period" id="report-period" class="form-select">
+                    <option value="day">Ngày</option>
+                    <option value="week">Tuần</option>
+                    <option value="month" selected>Tháng</option>
+                    <option value="year">Năm</option>
+                    <option value="custom">Khoảng ngày tùy chọn</option>
+                </select>
+            </div>
+            <div class="col-sm-auto" id="report-reference">
+                <label for="report-date" class="form-label">Chọn một ngày trong kỳ</label>
+                <input name="date" id="report-date" type="date" class="form-control" required />
+            </div>
+            <div class="col-sm-auto" id="report-from-field" hidden>
+                <label for="report-from" class="form-label">Từ ngày</label>
+                <input name="from" id="report-from" type="date" class="form-control" />
+            </div>
+            <div class="col-sm-auto" id="report-to-field" hidden>
+                <label for="report-to" class="form-label">Đến ngày</label>
+                <input name="to" id="report-to" type="date" class="form-control" />
+            </div>
+            <div class="col-sm-auto"><button class="btn btn-primary" type="submit">Xem báo cáo</button></div>
+        </fieldset>
+    </form>
+    <p id="report-status" role="status"></p>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button id="report-invoices-button" type="button" class="btn btn-outline-primary" disabled>Xem hóa đơn trong kỳ</button>
+        <a id="report-excel" data-url="@Url.Action("ExportExcel", "Reports")" class="btn btn-outline-success" hidden>Xuất Excel</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <caption class="visually-hidden">Chi tiết doanh thu bán hàng theo kỳ</caption>
+            <thead><tr><th scope="col" id="report-date-heading">Ngày (UTC)</th><th scope="col">Hóa đơn</th><th scope="col">Doanh thu</th></tr></thead>
+            <tbody id="report-days"></tbody>
+        </table>
+    </div>
+</section>
+<section id="report-invoices-panel" class="panel" aria-labelledby="report-invoices-title" hidden>
+    <div class="panel-heading flex-wrap">
+        <h2 id="report-invoices-title">Hóa đơn đã hoàn tất trong kỳ</h2>
+        <button id="report-invoices-close" type="button" class="btn btn-sm btn-outline-secondary">Đóng</button>
+    </div>
+    <p id="report-invoices-status" role="status"></p>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th scope="col">Hóa đơn</th><th scope="col">Giờ lập (UTC+7)</th><th scope="col">Khách hàng</th><th scope="col">Thu ngân</th><th scope="col">Thanh toán</th><th scope="col">Tổng tiền</th><th scope="col">Hàng hóa</th></tr></thead>
+            <tbody id="report-invoices"></tbody>
+        </table>
+    </div>
+    <nav class="d-flex gap-2 mt-2" aria-label="Phân trang hóa đơn">
+        <button id="report-invoices-prev" type="button" class="btn btn-sm btn-outline-secondary" disabled>Trước</button>
+        <button id="report-invoices-next" type="button" class="btn btn-sm btn-outline-secondary" disabled>Tiếp</button>
+    </nav>
+</section>
+<section id="report-low-stock" class="panel" aria-labelledby="report-low-stock-title" hidden>
+    <div class="panel-heading flex-wrap">
+        <div>
+            <h2 id="report-low-stock-title">Mặt hàng tồn thấp hiện tại</h2>
+            <p>Số lượng tồn tại thời điểm xem báo cáo.</p>
+        </div>
+        <a asp-controller="Inventory" asp-action="Index" asp-route-lowStock="true">Mở danh sách tồn thấp</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr><th scope="col">Mã hàng</th><th scope="col">Sản phẩm</th><th scope="col">Đơn vị</th><th scope="col">Tồn hiện tại</th><th scope="col">Ngưỡng cảnh báo</th></tr>
+            </thead>
+            <tbody id="report-low-stock-items"></tbody>
+        </table>
+    </div>
+</section>
 <script src="~/js/sales-report.js" asp-append-version="true" defer></script>

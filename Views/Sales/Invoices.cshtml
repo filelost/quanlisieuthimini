@@ -8,11 +8,6 @@
     </form>
     <div class="table-responsive">
         <table class="table">
-            <thead><tr><th>Mã hóa đơn</th><th>Ngày giờ lập (UTC+7)</th><th>Khách hàng</th><th>Thanh toán</th><th>Trạng thái</th><th>Tổng tiền</th><th></th></tr></thead>
-            <tbody>
-            @if (Model.Count == 0)
-            {
-                <tr><td colspan="7" class="text-center text-muted">Không tìm thấy hóa đơn.</td></tr>
             <thead><tr><th>Mã hóa đơn</th><th>Ngày giờ lập (UTC+7)</th><th>Khách hàng</th><th>Thanh toán</th><th>Trạng thái</th><th>Tổng tiền</th></tr></thead>
             <tbody>
             @if (Model.Count == 0)
@@ -28,16 +23,9 @@
                     <td>@(invoice.PaymentMethod == "Cash" ? "Tiền mặt" : invoice.PaymentMethod)</td>
                     <td><partial name="_InvoiceStatus" model="invoice.Status" /></td>
                     <td class="text-nowrap">@invoice.TotalAmount.ToString("N2") ₫</td>
-                    <td>
-                        @if (invoice.Status == "Completed")
-                        {
-                            <a asp-action="Print" asp-route-id="@invoice.SalesInvoiceId" target="_blank" rel="noopener">In</a>
-                        }
-                    </td>
                 </tr>
             }
             </tbody>
         </table>
     </div>
-</section>
 </section>
